@@ -25,14 +25,14 @@ The previous example will also install a version of PHPCS to your vendor directo
 To use this standard with `phpcs` directly from your command line, use the command:
 
 ```
-vendor/bin/phpcs --standard=vendor/alley/coding-standards .
+vendor/bin/phpcs --standard=vendor/alley/alley-coding-standards .
 ```
 
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```
 "scripts": {
-    "phpcs" : "phpcs --standard=vendor/alley/coding-standards ."
+    "phpcs" : "phpcs --standard=vendor/alley/alley-coding-standards ."
 }
 ```
 
@@ -57,7 +57,7 @@ You can create a custom ruleset for your project that extends or customizes thes
 	<description>Example project ruleset</description>
 
     <!-- Include Alley Rules -->
-    <rule ref="vendor/alley/coding-standards" />
+    <rule ref="vendor/alley/alley-coding-standards" />
 
     <!-- Project customizations go here -->
 
