@@ -1,5 +1,5 @@
 {
-	"name": "alley/coding-standards",
+	"name": "alley/alley-coding-standards",
 	"description": "PHPCS sniffs for Alley Interactive",
 	"type": "project",
 	"license": "GPL-2.0-or-later",
