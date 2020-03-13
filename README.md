@@ -10,11 +10,11 @@ To use this standard in a project, declare it as a dependency in the `composer.j
 "repositories": [
     {
         "type": "git",
-        "url": "https://github.com/joemcgill/alley-coding-standards"
+        "url": "https://github.com/alleyinteractive/Alley-Coding-Standards"
     }
 ],
 "require-dev": {
-    "alley/coding-standards": "dev-master"
+    "alley/alley-coding-standards": "dev-master"
 }
 ```
 
