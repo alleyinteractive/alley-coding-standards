@@ -16,9 +16,12 @@
 	<!-- Use the VIP Go ruleset. -->
 	<rule ref="WordPress-VIP-Go" />
 
-	<!-- 
+	<!--
 	Alley specific customizations.
 	-->
+
+	<!-- We prefer short array syntax. -->
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
 
 	<!-- Allow for common global prefixes used in Alley code. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
