@@ -18,21 +18,21 @@ To use this standard in a project, declare it as a dependency in the `composer.j
 }
 ```
 
-The previous example will also install a version of PHPCS to your vendor directory.
+The previous example will also install a version of PHPCS to your vendor directory in order to run sniffs locally.
 
 ## Using PHPCS
 
 To use this standard with `phpcs` directly from your command line, use the command:
 
 ```
-vendor/bin/phpcs --standard=vendor/alley/alley-coding-standards .
+vendor/bin/phpcs --standard=Alley-Coding-Standards .
 ```
 
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```
 "scripts": {
-    "phpcs" : "phpcs --standard=vendor/alley/alley-coding-standards ."
+    "phpcs" : "phpcs --standard=Alley-Coding-Standards ."
 }
 ```
 
@@ -42,7 +42,7 @@ Then use the following command:
 composer run phpcs
 ```
 
-You can also pass arguments to phpcs from the composer script like this:
+You can also pass arguments to the componser phpcs script, following a `--` operator like this:
 
 ```
 composer run phpcs -- --report=summary
@@ -57,7 +57,7 @@ You can create a custom ruleset for your project that extends or customizes thes
 	<description>Example project ruleset</description>
 
     <!-- Include Alley Rules -->
-    <rule ref="vendor/alley/alley-coding-standards" />
+    <rule ref="Alley-Coding-Standards" />
 
     <!-- Project customizations go here -->
 
