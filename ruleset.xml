@@ -11,6 +11,8 @@
 	<rule ref="WordPress">
 		<!-- Allow short array syntax. -->
 		<exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
+		<!-- Allow short ternary expressions -->
+		<exclude name="WordPress.PHP.DisallowShortTernary" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
