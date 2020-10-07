@@ -4,17 +4,15 @@ This is a PHPCS ruleset for [Alley Interactive](https://alley.co). Currently onl
 
 ## Installation
 
-To use this standard in a project, declare it as a dependency in the `composer.json` file and then run `composer install`.
+To use this standard in a project, declare it as a dependency.
 
 ```
-"repositories": [
-    {
-        "type": "git",
-        "url": "https://github.com/alleyinteractive/Alley-Coding-Standards"
-    }
-],
+composer require alleyinteractive/alley-coding-standards
+```
+
+```
 "require-dev": {
-    "alley/alley-coding-standards": "dev-master"
+    "alleyinteractive/alley-coding-standards": "0.2.0"
 }
 ```
 
@@ -63,3 +61,15 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 </ruleset>
 ```
+
+# Change Log
+
+This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+
+## 0.2.0
+
+- Composer package renamed to `alleyinteractive/alley-coding-standards`.
+
+## 0.1.0
+
+- Initial release.
