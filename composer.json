@@ -1,7 +1,7 @@
 {
 	"name": "alley/alley-coding-standards",
 	"description": "PHPCS sniffs for Alley Interactive",
-	"type": "project",
+	"type" : "phpcodesniffer-standard",
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"wp-coding-standards/wpcs": "^2.3.0",
