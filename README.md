@@ -10,13 +10,15 @@ To use this standard in a project, declare it as a dependency.
 composer require alleyinteractive/alley-coding-standards
 ```
 
+This will install the latest compatible version of PHPCS, WPCS, and VIPCS to your vendor directory in order to run sniffs locally.
+
+You can also manually add this to your project's composer.json file as part of the `require` property:
+
 ```
-"require-dev": {
-    "alleyinteractive/alley-coding-standards": "0.2.0"
+"require": {
+    "alleyinteractive/alley-coding-standards": "^0.2.0"
 }
 ```
-
-The previous example will also install a version of PHPCS to your vendor directory in order to run sniffs locally.
 
 ## Using PHPCS
 
@@ -40,7 +42,7 @@ Then use the following command:
 composer run phpcs
 ```
 
-You can also pass arguments to the componser phpcs script, following a `--` operator like this:
+You can also pass arguments to the composer phpcs script, following a `--` operator like this:
 
 ```
 composer run phpcs -- --report=summary
@@ -68,6 +70,7 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 
 ## 0.2.0
 
+- Sniff name changed to Alley-Interactive.
 - Composer package renamed to `alleyinteractive/alley-coding-standards`.
 
 ## 0.1.0
