@@ -25,14 +25,14 @@ The previous example will also install a version of PHPCS to your vendor directo
 To use this standard with `phpcs` directly from your command line, use the command:
 
 ```
-vendor/bin/phpcs --standard=Alley-Coding-Standards .
+vendor/bin/phpcs --standard=Alley-Interactive .
 ```
 
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```
 "scripts": {
-    "phpcs" : "phpcs --standard=Alley-Coding-Standards ."
+    "phpcs" : "phpcs --standard=Alley-Interactive ."
 }
 ```
 
@@ -57,7 +57,7 @@ You can create a custom ruleset for your project that extends or customizes thes
 	<description>Example project ruleset</description>
 
     <!-- Include Alley Rules -->
-    <rule ref="Alley-Coding-Standards" />
+    <rule ref="Alley-Interactive" />
 
     <!-- Project customizations go here -->
 
