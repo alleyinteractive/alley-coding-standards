@@ -72,6 +72,7 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 
 - Sniff name changed to Alley-Interactive.
 - Composer package renamed to `alleyinteractive/alley-coding-standards`.
+- Allow short ternary syntax (#6)
 
 ## 0.1.0
 
