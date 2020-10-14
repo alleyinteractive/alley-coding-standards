@@ -1,13 +1,13 @@
 {
-	"name": "alley/alley-coding-standards",
+	"name": "alleyinteractive/alley-coding-standards",
 	"description": "PHPCS sniffs for Alley Interactive",
-	"type": "project",
+	"type": "phpcodesniffer-standard",
 	"license": "GPL-2.0-or-later",
 	"require": {
-		"wp-coding-standards/wpcs": "^2.3.0",
-		"automattic/vipwpcs": "^2.1.0",
 		"squizlabs/php_codesniffer": "^3.5.0",
-		"dealerdirect/phpcodesniffer-composer-installer": "^0.7.0"
+		"dealerdirect/phpcodesniffer-composer-installer": "*",
+		"wp-coding-standards/wpcs": "^2.3.0",
+		"automattic/vipwpcs": "^2.1.0"
 	},
 	"require-dev": {}
 }

@@ -4,35 +4,35 @@ This is a PHPCS ruleset for [Alley Interactive](https://alley.co). Currently onl
 
 ## Installation
 
-To use this standard in a project, declare it as a dependency in the `composer.json` file and then run `composer install`.
+To use this standard in a project, declare it as a dependency.
 
 ```
-"repositories": [
-    {
-        "type": "git",
-        "url": "https://github.com/alleyinteractive/Alley-Coding-Standards"
-    }
-],
-"require-dev": {
-    "alley/alley-coding-standards": "dev-master"
+composer require alleyinteractive/alley-coding-standards
+```
+
+This will install the latest compatible version of PHPCS, WPCS, and VIPCS to your vendor directory in order to run sniffs locally.
+
+You can also manually add this to your project's composer.json file as part of the `require` property:
+
+```
+"require": {
+    "alleyinteractive/alley-coding-standards": "^0.2.0"
 }
 ```
-
-The previous example will also install a version of PHPCS to your vendor directory in order to run sniffs locally.
 
 ## Using PHPCS
 
 To use this standard with `phpcs` directly from your command line, use the command:
 
 ```
-vendor/bin/phpcs --standard=Alley-Coding-Standards .
+vendor/bin/phpcs --standard=Alley-Interactive .
 ```
 
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```
 "scripts": {
-    "phpcs" : "phpcs --standard=Alley-Coding-Standards ."
+    "phpcs" : "phpcs --standard=Alley-Interactive ."
 }
 ```
 
@@ -42,7 +42,7 @@ Then use the following command:
 composer run phpcs
 ```
 
-You can also pass arguments to the componser phpcs script, following a `--` operator like this:
+You can also pass arguments to the composer phpcs script, following a `--` operator like this:
 
 ```
 composer run phpcs -- --report=summary
@@ -57,9 +57,22 @@ You can create a custom ruleset for your project that extends or customizes thes
 	<description>Example project ruleset</description>
 
     <!-- Include Alley Rules -->
-    <rule ref="Alley-Coding-Standards" />
+    <rule ref="Alley-Interactive" />
 
     <!-- Project customizations go here -->
 
 </ruleset>
 ```
+
+# Change Log
+
+This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+
+## 0.2.0
+
+- Sniff name changed to Alley-Interactive.
+- Composer package renamed to `alleyinteractive/alley-coding-standards`.
+
+## 0.1.0
+
+- Initial release.
