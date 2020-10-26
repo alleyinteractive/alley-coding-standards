@@ -5,7 +5,7 @@
 	"license": "GPL-2.0-or-later",
 	"require": {
 		"squizlabs/php_codesniffer": "^3.5.0",
-		"dealerdirect/phpcodesniffer-composer-installer": "*",
+		"dealerdirect/phpcodesniffer-composer-installer": "dev-master",
 		"wp-coding-standards/wpcs": "^2.3.0",
 		"automattic/vipwpcs": "^2.1.0",
 		"phpcompatibility/phpcompatibility-wp": "*"
