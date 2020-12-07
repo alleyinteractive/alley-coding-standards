@@ -6,7 +6,7 @@
 	"repositories": [
 		{
 			"type": "vcs",
-			"url": "git@github.com:kevinfodness/phpcodesniffer-composer-installer.git"
+			"url": "https://github.com/kevinfodness/phpcodesniffer-composer-installer"
 		}
 	],
 	"require": {
