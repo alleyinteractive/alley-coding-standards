@@ -64,18 +64,4 @@
 		-->
 		<type>error</type>
 	</rule>
-
-	<!-- Forbidden functions -->
-	<rule ref="Generic.PHP.ForbiddenFunctions">
-		<properties>
-			<property name="forbiddenFunctions" type="array">
-				<!--
-				WordPress.com VIP does not propagate wp_cache_set data across data centers,
-				largely to avoid attempting to propagate large (>50k) data for batcache.
-				-->
-				<element key="wp_cache_add" value="wp_cache_set"/>
-			</property>
-        </properties>
-	</rule>
-
 </ruleset>
