@@ -32,7 +32,7 @@
 		</properties>
 
 		<!-- In practice, partials should be loaded outside of the global namespace with get_template_part(). -->
-		<exclude-pattern>themes(/vip)?/[^/]+/template-parts/</exclude-pattern>
+		<exclude-pattern>(plugins|themes)(/vip)?/[^/]+/template-parts/</exclude-pattern>
 		<exclude-pattern>vendor/</exclude-pattern>
 	</rule>
 
