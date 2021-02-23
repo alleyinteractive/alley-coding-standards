@@ -32,7 +32,7 @@
 		</properties>
 
 		<!-- In practice, partials should be loaded outside of the global namespace with get_template_part(). -->
-		<exclude-pattern>(plugins|themes)(/vip)?/[^/]+/template-parts/</exclude-pattern>
+		<exclude-pattern>(mu-plugins|plugins|themes)(/vip)?/[^/]+/(template-parts|views|partials)/</exclude-pattern>
 		<exclude-pattern>vendor/</exclude-pattern>
 	</rule>
 
@@ -63,5 +63,15 @@
 		See https://github.com/WordPress-Coding-Standards/WordPress-Coding-Standards/pull/1111.
 		-->
 		<type>error</type>
+	</rule>
+
+	<!-- Allow No PHP in Blade Files -->
+	<rule ref="Internal.NoCodeFound">
+		<exclude-pattern>*.blade.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow Missing File Comment for Blade Files -->
+	<rule ref="Squiz.Commenting.FileComment.Missing">
+		<exclude-pattern>*.blade.php</exclude-pattern>
 	</rule>
 </ruleset>
