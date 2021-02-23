@@ -2,8 +2,8 @@
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Alley-Interactive-Mantle" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
 	<description>Alley Interactive Mantle PHP coding standard.</description>
 
-  <!-- Include the Alley Coding Standards -->
-  <rule ref="Alley-Interactive" />
+	<!-- Include the Alley Coding Standards -->
+	<rule ref="Alley-Interactive" />
 
 	<!-- Allow for common global prefixes used in Alley code. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
@@ -11,7 +11,7 @@
 		<exclude-pattern>vendor/</exclude-pattern>
 	</rule>
 
-  <!-- Allow error template to use non-enqueued styles-->
+	<!-- Allow error template to use non-enqueued styles-->
 	<rule ref="WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet">
 		<exclude-pattern>views/error/</exclude-pattern>
 	</rule>
