@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Alley-Interactive-Mantle" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
+	<description>Alley Interactive Mantle PHP coding standard.</description>
+
+  <!-- Include the Alley Coding Standards -->
+  <rule ref="Alley-Interactive" />
+
+	<!-- Allow for common global prefixes used in Alley code. -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<exclude-pattern>(mu-plugins|plugins|themes)(/vip)?/[^/]+/(template-parts|views|partials)/</exclude-pattern>
+		<exclude-pattern>vendor/</exclude-pattern>
+	</rule>
+
+  <!-- Allow error template to use non-enqueued styles-->
+	<rule ref="WordPress.WP.EnqueuedResources.NonEnqueuedStylesheet">
+		<exclude-pattern>views/error/</exclude-pattern>
+	</rule>
+
+	<!-- Allow example code to include unused variables/code -->
+	<rule ref="VariableAnalysis.CodeAnalysis.VariableAnalysis.UnusedVariable">
+		<exclude-pattern>providers/</exclude-pattern>
+	</rule>
+
+	<rule ref="Squiz.PHP.CommentedOutCode.Found">
+		<exclude-pattern>routes/</exclude-pattern>
+	</rule>
+
+	<rule ref="Generic.CodeAnalysis.UselessOverridingMethod.Found">
+		<exclude-pattern>exceptions/class-handler.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow Factories to use a factory variable -->
+	<rule ref="VariableAnalysis.CodeAnalysis.VariableAnalysis.UndefinedVariable">
+		<exclude-pattern>database/factories/</exclude-pattern>
+	</rule>
+
+	<!-- Ignore array alignment for configuration files -->
+	<rule ref="WordPress.Arrays.MultipleStatementAlignment.DoubleArrowNotAligned">
+		<exclude-pattern>config/</exclude-pattern>
+	</rule>
+
+	<!-- Allow No PHP in Blade Files -->
+	<rule ref="Internal.NoCodeFound">
+		<exclude-pattern>*.blade.php</exclude-pattern>
+	</rule>
+
+	<!-- Allow Missing File Comment for Blade Files -->
+	<rule ref="Squiz.Commenting.FileComment.Missing">
+		<exclude-pattern>*.blade.php</exclude-pattern>
+	</rule>
+</ruleset>
