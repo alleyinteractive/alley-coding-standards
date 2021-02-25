@@ -16,7 +16,7 @@ You can also manually add this to your project's composer.json file as part of t
 
 ```
 "require": {
-    "alleyinteractive/alley-coding-standards": "^0.2.0"
+    "alleyinteractive/alley-coding-standards": "^0.3.0"
 }
 ```
 
@@ -67,6 +67,12 @@ You can create a custom ruleset for your project that extends or customizes thes
 # Change Log
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+
+## 0.3.0
+
+- Add PHPCompatibilityWP standard as a dependency (#9)
+- Exclude plugin template parts from WordPress.NamingConventions.PrefixAllGlobals sniff (#11)
+- Remove 'wp_cache_set' from forbidden functions (#12)
 
 ## 0.2.0
 
