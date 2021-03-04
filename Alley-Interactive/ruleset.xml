@@ -2,10 +2,10 @@
 <ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="Alley Interactive" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/squizlabs/PHP_CodeSniffer/master/phpcs.xsd">
 	<description>The Alley Interactive PHP coding standard.</description>
 
+	<arg name="extensions" value="php,js,jsx"/>
+	
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*.js</exclude-pattern>
-	<exclude-pattern>*.css</exclude-pattern>
 
 	<!-- Use the WordPress ruleset, with some customizations. -->
 	<rule ref="WordPress">
