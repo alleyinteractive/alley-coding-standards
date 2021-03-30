@@ -18,6 +18,12 @@
 	<!-- Use the VIP Go ruleset. -->
 	<rule ref="WordPress-VIP-Go" />
 
+	<!-- Use the PHPCompatibilityWP rules -->
+	<rule ref="PHPCompatibilityWP" />
+
+	<!-- Check for cross-version support for PHP 7.4 and higher. -->
+	<config name="testVersion" value="7.4-"/>
+
 	<!--
 	Alley specific customizations.
 	-->
