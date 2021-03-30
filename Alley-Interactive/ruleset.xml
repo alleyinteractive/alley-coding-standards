@@ -19,7 +19,7 @@
 	<rule ref="WordPress-VIP-Go" />
 
 	<!-- Use the PHPCompatibilityWP rules -->
-	<rul ref="PHPCompatibilityWP" />
+	<rule ref="PHPCompatibilityWP" />
 
 	<!-- Check for cross-version support for PHP 7.3 and higher. -->
 	<config name="testVersion" value="7.3-"/>
