@@ -4,8 +4,9 @@
 
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*.js</exclude-pattern>
-	<exclude-pattern>*.css</exclude-pattern>
+	
+	<!-- Only lint php files by default -->
+	<arg name="extensions" value="php" />
 
 	<!-- Use the WordPress ruleset, with some customizations. -->
 	<rule ref="WordPress">
