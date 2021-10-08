@@ -1,6 +1,6 @@
 # Alley Coding Standards
 
-This is a PHPCS ruleset for [Alley Interactive](https://alley.co). Currently only a proof of concept.
+This is a PHPCS ruleset for [Alley Interactive](https://alley.co).
 
 ## Installation
 
@@ -71,6 +71,8 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 ## 0.4.0
 
 - Add PHPCompatibilityWP sniffs to our rules, configured for PHP 7.4+
+- Make template-parts rule checking more ambiguous to better support scanning standalone plugins and themes
+
 ## 0.3.0
 
 - Add PHPCompatibilityWP standard as a dependency (#9)
