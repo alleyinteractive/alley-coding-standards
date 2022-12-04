@@ -21,8 +21,8 @@
 	<!-- Use the PHPCompatibilityWP rules -->
 	<rule ref="PHPCompatibilityWP" />
 
-	<!-- Check for cross-version support for PHP 7.4 and higher. -->
-	<config name="testVersion" value="7.4-"/>
+	<!-- Check for cross-version support for PHP 8.0 and higher. -->
+	<config name="testVersion" value="8.0-"/>
 
 	<!--
 	Alley specific customizations.
