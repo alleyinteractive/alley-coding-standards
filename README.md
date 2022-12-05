@@ -68,7 +68,7 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
-### 0.4.0-alpha
+### 0.4.0
 
 - Add PHPCompatibilityWP sniffs to our rules, configured for PHP 7.4+
 - Make template-parts rule checking more ambiguous to better support scanning standalone plugins and themes
