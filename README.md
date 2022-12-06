@@ -1,6 +1,6 @@
 # Alley Coding Standards
 
-This is a PHPCS ruleset for [Alley Interactive](https://alley.co).
+This is a PHPCS ruleset for [Alley Interactive](https://alley.com).
 
 ## Installation
 
@@ -16,7 +16,7 @@ You can also manually add this to your project's composer.json file as part of t
 
 ```
 "require": {
-    "alleyinteractive/alley-coding-standards": "^0.3.0"
+    "alleyinteractive/alley-coding-standards": "^0.4.0"
 }
 ```
 
@@ -49,42 +49,43 @@ composer run phpcs -- --report=summary
 ```
 
 ## Extending the ruleset
+
 You can create a custom ruleset for your project that extends or customizes these rules by creating your own  `phpcs.xml` or `phpcs.xml.dist` file in your project, which references these rules, like this:
 
-```
+```xml
 <?xml version="1.0"?>
 <ruleset>
-	<description>Example project ruleset</description>
+  <description>Example project ruleset</description>
 
-    <!-- Include Alley Rules -->
-    <rule ref="Alley-Interactive" />
+  <!-- Include Alley Rules -->
+  <rule ref="Alley-Interactive" />
 
-    <!-- Project customizations go here -->
-
+  <!-- Project customizations go here -->
 </ruleset>
 ```
 
-# Change Log
+## Change Log
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
-## 0.4.0-alpha
+### 0.4.0
 
-- Add PHPCompatibilityWP sniffs to our rules, configured for PHP 7.4+
+- Add PHPCompatibilityWP sniffs to our rules, configured for PHP 8.0+
 - Make template-parts rule checking more ambiguous to better support scanning standalone plugins and themes
+- Added `static analysis` keyword to Composer to promote package to be installed with `--dev`.
 
-## 0.3.0
+### 0.3.0
 
 - Add PHPCompatibilityWP standard as a dependency (#9)
 - Exclude plugin template parts from WordPress.NamingConventions.PrefixAllGlobals sniff (#11)
 - Remove 'wp_cache_set' from forbidden functions (#12)
 
-## 0.2.0
+### 0.2.0
 
 - Sniff name changed to Alley-Interactive.
 - Composer package renamed to `alleyinteractive/alley-coding-standards`.
 - Allow short ternary syntax (#6)
 
-## 0.1.0
+### 0.1.0
 
 - Initial release.
