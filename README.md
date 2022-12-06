@@ -70,8 +70,9 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 
 ### 0.4.0
 
-- Add PHPCompatibilityWP sniffs to our rules, configured for PHP 7.4+
+- Add PHPCompatibilityWP sniffs to our rules, configured for PHP 8.0+
 - Make template-parts rule checking more ambiguous to better support scanning standalone plugins and themes
+- Added `static analysis` keyword to Composer to promote package to be installed with `--dev`.
 
 ### 0.3.0
 
