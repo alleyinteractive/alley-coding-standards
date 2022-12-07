@@ -5,11 +5,16 @@
 	"keywords": [ "phpcs", "static analysis" ],
 	"license": "GPL-2.0-or-later",
 	"require": {
+		"automattic/vipwpcs": "^2.3.3",
+		"dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
+		"phpcompatibility/phpcompatibility-wp": "^2.1.4",
 		"squizlabs/php_codesniffer": "^3.5.0",
-		"dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
-		"wp-coding-standards/wpcs": "^2.3.0",
-		"automattic/vipwpcs": "^2.2.0",
-		"phpcompatibility/phpcompatibility-wp": "^2.1.0"
+		"wp-coding-standards/wpcs": "^2.3.0"
 	},
-	"require-dev": {}
+	"require-dev": {},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	}
 }

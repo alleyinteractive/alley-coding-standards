@@ -68,6 +68,10 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 0.4.1
+
+- Upgrading to `automattic/vipwpcs` v2.3.3 and `dealerdirect/phpcodesniffer-composer-installer` v0.7.2.
+
 ### 0.4.0
 
 - Add PHPCompatibilityWP sniffs to our rules, configured for PHP 8.0+
