@@ -73,7 +73,7 @@ not compatible with PHP 8.1 and runs into some issues when being used. Until
 `wp-coding-standards/wpcs` 3.0 is released we can use a forked version of the
 package that is compatible with PHP 8.1.
 
-1. Add the Repository
+### 1. Add the Repository
 
 Add the Composer repository to your project's `composer.json` file:
 
@@ -88,7 +88,7 @@ Add the Composer repository to your project's `composer.json` file:
 }
 ```
 
-2. Switch to the Forked Version
+### 2. Switch to the Forked Version
 
 Add the following to your `composer.json` file `autoload-dev` section:
 
@@ -101,7 +101,7 @@ Add the following to your `composer.json` file `autoload-dev` section:
 }
 ```
 
-3. Run `composer update`
+### 3. Run `composer update`
 
 If you run into any problems, please let us know in the
 [#opensource](https://alleyinteractive.slack.com/archives/C03JT2JT1RU). channel.
