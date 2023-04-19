@@ -103,10 +103,9 @@ Add the following to your `composer.json` file `autoload-dev` section:
 
 ### 3. Run `composer update`
 
-If you run into any problems, please let us know in the
-[#opensource](https://alleyinteractive.slack.com/archives/C03JT2JT1RU). channel.
-After `wp-coding-standards/wpcs` 3.0 is released we will remove the above fork
-from our projects and rely on the official release.
+If you run into any problems, please open an issue. After
+`wp-coding-standards/wpcs` 3.0 is released we will remove the above fork from
+our projects and rely on the official release.
 
 ## Change Log
 
