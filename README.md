@@ -79,12 +79,12 @@ Add the Composer repository to your project's `composer.json` file:
 
 ```json
 {
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/alleyinteractive/WordPress-Coding-Standards"
+    "repositories": {
+        "wpcs": {
+            "type": "vcs",
+            "url": "https://github.com/alleyinteractive/WordPress-Coding-Standards"
+        }
     }
-  ]
 }
 ```
 
@@ -94,10 +94,10 @@ Add the following to your `composer.json` file `autoload-dev` section:
 
 ```json
 {
-  "require-dev": {
-    "alleyinteractive/alley-coding-standards": "^1.0",
-    "wp-coding-standards/wpcs": "dev-php-8-1 as 2.3.x-dev",
-  }
+    "require-dev": {
+        "alleyinteractive/alley-coding-standards": "^1.0",
+        "wp-coding-standards/wpcs": "dev-php-8-1 as 2.3.x-dev"
+    },
 }
 ```
 
