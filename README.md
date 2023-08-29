@@ -64,52 +64,13 @@ You can create a custom ruleset for your project that extends or customizes thes
 </ruleset>
 ```
 
-## Using Alley Coding Standards on PHP 8.1
-
-If you plan on using this ruleset on PHP 8.1, you will need to make some
-modifications to your Composer configuration. For some context, the current
-version of this ruleset requires `wp-coding-standards/wpcs` 2.3. This package is
-not compatible with PHP 8.1 and runs into some issues when being used. Until
-`wp-coding-standards/wpcs` 3.0 is released we can use a forked version of the
-package that is compatible with PHP 8.1.
-
-### 1. Add the Repository
-
-Add the Composer repository to your project's `composer.json` file:
-
-```json
-{
-    "repositories": {
-        "wpcs": {
-            "type": "vcs",
-            "url": "https://github.com/alleyinteractive/WordPress-Coding-Standards"
-        }
-    }
-}
-```
-
-### 2. Switch to the Forked Version
-
-Add the following to your `composer.json` file `autoload-dev` section:
-
-```json
-{
-    "require-dev": {
-        "alleyinteractive/alley-coding-standards": "^1.0",
-        "wp-coding-standards/wpcs": "dev-php-8-1 as 2.3.x-dev"
-    },
-}
-```
-
-### 3. Run `composer update`
-
-If you run into any problems, please open an issue. After
-`wp-coding-standards/wpcs` 3.0 is released we will remove the above fork from
-our projects and rely on the official release.
-
 ## Change Log
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+
+### 1.0.1
+
+- Ignore deprecation errors in WPCS to allow it work with PHP 8.0+.
 
 ### 1.0.0
 
