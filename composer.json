@@ -5,7 +5,7 @@
 	"keywords": [ "phpcs", "static analysis" ],
 	"license": "GPL-2.0-or-later",
 	"require": {
-		"automattic/vipwpcs": "^2.3.3",
+		"automattic/vipwpcs": "^2.3.4",
 		"phpcompatibility/phpcompatibility-wp": "^2.1.4"
 	},
 	"config": {
