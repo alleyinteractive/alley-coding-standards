@@ -17,6 +17,8 @@
 		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames" />
 		<!-- Allow post-increment/decrement vs disallowing it. -->
 		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement" />
+		<!-- Allow checking any capability. -->
+		<exclude name="WordPress.WP.Capabilities.Undetermined" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
