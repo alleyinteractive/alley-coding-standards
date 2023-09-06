@@ -64,9 +64,23 @@ You can create a custom ruleset for your project that extends or customizes thes
 </ruleset>
 ```
 
+## Upgrading to 2.0
+
+This version upgrades the library to WordPress Coding Standards and VIP Coding
+Standards 3.0. This includes several breaking changes and renames of various
+sniffs, including:
+
+- ...
+
 ## Change Log
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+
+### 2.0.0
+
+- **Breaking Change:** Upgraded to `automattic/vipwpcs` and
+  `wp-coding-standards/wpcs` to 3.0. See [Upgrading to 2.0](#upgrading-to-20])
+  for more details.
 
 ### 1.0.1
 
