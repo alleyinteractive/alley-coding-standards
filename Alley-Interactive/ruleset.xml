@@ -11,6 +11,8 @@
 	<rule ref="WordPress">
 		<!-- Allow short array syntax. -->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+		<!-- Allow any name to be used as a function paramater name. -->
+		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
