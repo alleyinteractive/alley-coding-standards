@@ -11,8 +11,12 @@
 	<rule ref="WordPress">
 		<!-- Allow short array syntax. -->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
+		<!-- Allow short ternary expressions -->
+		<exclude name="Universal.Operators.DisallowShortTernary.Found" />
 		<!-- Allow any name to be used as a function paramater name. -->
 		<exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames" />
+		<!-- Allow post-increment/decrement vs disallowing it. -->
+		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
