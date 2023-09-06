@@ -10,9 +10,7 @@
 	<!-- Use the WordPress ruleset, with some customizations. -->
 	<rule ref="WordPress">
 		<!-- Allow short array syntax. -->
-		<exclude name="Generic.Arrays.DisallowShortArraySyntax.Found" />
-		<!-- Allow short ternary expressions -->
-		<exclude name="WordPress.PHP.DisallowShortTernary" />
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
@@ -23,12 +21,6 @@
 
 	<!-- Check for cross-version support for PHP 8.0 and higher. -->
 	<config name="testVersion" value="8.0-"/>
-
-	<!--
-	Prevent errors caused by WordPress Coding Standards not supporting PHP 8.0+.
-	See https://github.com/WordPress/WordPress-Coding-Standards/issues/2035
-	-->
-	<ini name="error_reporting" value="E_ALL &#38; ~E_DEPRECATED" />
 
 	<!--
 	Alley specific customizations.
