@@ -19,6 +19,7 @@
 		<exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement" />
 		<!-- Allow checking any capability. -->
 		<exclude name="WordPress.WP.Capabilities.Undetermined" />
+		<exclude name="WordPress.WP.Capabilities.Unknown" />
 	</rule>
 
 	<!-- Use the VIP Go ruleset. -->
