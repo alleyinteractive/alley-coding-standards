@@ -77,4 +77,9 @@
 		-->
 		<type>error</type>
 	</rule>
+
+	<!-- Ignore an issue with singleton classes instance methods being flagged. -->
+	<rule ref="Universal.CodeAnalysis.ConstructorDestructorReturn.ReturnValueFound">
+		<exclude-pattern>(class|trait)-(instance|singleton).php</exclude-pattern>
+	</rule>
 </ruleset>
