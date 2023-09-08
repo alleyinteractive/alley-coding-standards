@@ -68,6 +68,12 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.0.0
+
+- **Breaking Change:** Upgraded to `automattic/vipwpcs` and
+  `wp-coding-standards/wpcs` to 3.0. See [Upgrading to 2.0](https://github.com/alleyinteractive/alley-coding-standards/wiki/Upgrading-to-2.0)
+  for more details.
+
 ### 1.0.1
 
 - Ignore deprecation errors in WPCS to allow it work with PHP 8.0+.
