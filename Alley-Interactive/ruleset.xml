@@ -36,6 +36,7 @@
 	-->
 
 	<!-- We prefer short array syntax. -->
+	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
 	<rule ref="WordPress">
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
 	</rule>
