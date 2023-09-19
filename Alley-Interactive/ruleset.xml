@@ -36,7 +36,9 @@
 	-->
 
 	<!-- We prefer short array syntax. -->
-	<rule ref="Generic.Arrays.DisallowLongArraySyntax" />
+	<rule ref="WordPress">
+		<exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+	</rule>
 
 	<!-- Allow for common global prefixes used in Alley code. -->
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
