@@ -16,7 +16,7 @@ You can also manually add this to your project's composer.json file as part of t
 
 ```
 "require": {
-    "alleyinteractive/alley-coding-standards": "^1.0"
+    "alleyinteractive/alley-coding-standards": "^2.0"
 }
 ```
 
