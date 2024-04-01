@@ -4,8 +4,8 @@
 
 	<exclude-pattern>*/node_modules/*</exclude-pattern>
 	<exclude-pattern>*/vendor/*</exclude-pattern>
-	<exclude-pattern>*.js</exclude-pattern>
-	<exclude-pattern>*.css</exclude-pattern>
+	<exclude-pattern>*\.js$</exclude-pattern>
+	<exclude-pattern>*\.css$</exclude-pattern>
 
 	<!-- Use the WordPress ruleset, with some customizations. -->
 	<rule ref="WordPress">
@@ -28,8 +28,8 @@
 	<!-- Use the PHPCompatibilityWP rules -->
 	<rule ref="PHPCompatibilityWP" />
 
-	<!-- Check for cross-version support for PHP 8.0 and higher. -->
-	<config name="testVersion" value="8.0-"/>
+	<!-- Check for cross-version support for PHP 8.1 and higher. -->
+	<config name="testVersion" value="8.1-"/>
 
 	<!--
 	Alley specific customizations.
