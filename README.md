@@ -68,10 +68,14 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
-### 2.0.1
+### 2.0.2
 
 - Fix issue with files with `js`/`css` in the path being ignored.
 - Bumping to PHP 8.1.
+
+### 2.0.1
+
+- Update "Prefer array syntax" rule to 3.0.
 
 ### 2.0.0
 
