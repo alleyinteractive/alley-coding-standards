@@ -49,7 +49,12 @@ trait PhpcsHelper {
 	 * @param array<string> $ignored_errors The errors to ignore. If an error is found in this list, it will be ignored and not fail the test if it is not found.
 	 * @param array<string> $expected_errors The errors that are expected to be found. If an error is not found that is in this list, the test will fail.
 	 */
-	protected function process_phpcs_output( array $output, array $ignored_errors = [], array $expected_errors = [] ): void {
+	protected function process_phpcs_output(
+		array $output,
+		array $ignored_errors = [],
+		array $expected_errors = [],
+		bool $expect_to_fail = false,
+	): void {
 		// Add expected errors to the list of ignored errors.
 		$ignored_errors = array_unique( array_merge( $ignored_errors, $expected_errors ) );
 
@@ -71,6 +76,13 @@ trait PhpcsHelper {
 			);
 
 			if ( ! empty( $unexpected_messages ) ) {
+				// Bail if we expect the test to fail and there are errors.
+				if ( $expect_to_fail ) {
+					$this->assertTrue( true );
+
+					return;
+				}
+
 				$this->fail(
 					sprintf(
 						'Unexpected errors found in %s: %s',
@@ -91,6 +103,10 @@ trait PhpcsHelper {
 				print_r( $expected_errors_not_found, true ),
 			),
 		);
+
+		if ( $expect_to_fail ) {
+			$this->fail( 'Test did not fail as expected' );
+		}
 	}
 
 }

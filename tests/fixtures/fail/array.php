@@ -5,4 +5,4 @@
  * @package Alley\WP\Coding_Standards
  */
 
-$ai_example = [ 1, 2, 3 ];
+$ai_another = array( 5, 6, 7, 8 );

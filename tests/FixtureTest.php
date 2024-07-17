@@ -29,12 +29,31 @@ class FixtureTest extends TestCase {
 	}
 
 	/**
+	 * Test that fixtures fail.
+	 *
+	 * @param string $file The file to test.
+	 */
+	#[DataProvider( 'failing_fixture_data_provider' )]
+	public function test_failing_fixtures( string $file ): void {
+		$this->process_phpcs_output( $this->run_phpcs( $file ), expect_to_fail: true );
+	}
+
+	/**
 	 * Returns an array of fixtures that should pass.
 	 *
 	 * @return array<string>
 	 */
-	public static function passing_fixture_data_provider() {
+	public static function passing_fixture_data_provider(): array {
 		return array_map( fn ( $file ) => [ $file ], self::get_files_in_directory( __DIR__ . '/fixtures/pass' ) );
+	}
+
+	/**
+	 * Returns an array of fixtures that should fail.
+	 *
+	 * @return array<array<string|array<string>>>
+	 */
+	public static function failing_fixture_data_provider(): array {
+		return array_map( fn ( $file ) => [ $file ], self::get_files_in_directory( __DIR__ . '/fixtures/fail' ) );
 	}
 
 	/**

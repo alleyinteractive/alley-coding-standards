@@ -2,13 +2,11 @@
 /**
  * Functions test file.
  *
- * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
- *
  * @package Alley\WP\Coding_Standards
  */
 
-$a = function () {
+$ai_function = function () {
 	return 'Hello, World!';
 };
 
-echo esc_html( $a() );
+echo esc_html( $ai_function() );
