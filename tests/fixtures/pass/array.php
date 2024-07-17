@@ -1,14 +1,10 @@
 <?php
 /**
- * Functions test file.
+ * Array test file.
  *
  * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
  *
  * @package Alley\WP\Coding_Standards
  */
 
-$a = function () {
-	return 'Hello, World!';
-};
-
-echo esc_html( $a() );
+$example = [ 1, 2, 3 ];

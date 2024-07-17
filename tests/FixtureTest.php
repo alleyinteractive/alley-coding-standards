@@ -1,13 +1,14 @@
-<?php // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
+<?php
 /**
  * FixtureTest class file
+ *
+ * phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedNamespaceFound
  *
  * @package Alley\WP\Coding_Standards
  */
 
-namespace Alley\WP\Coding_Standards;
+namespace Alley\WP\Coding_Standards\Tests;
 
-use PHP_CodeSniffer\Runner;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -15,34 +16,7 @@ use PHPUnit\Framework\TestCase;
  * Fixture Test
  */
 class FixtureTest extends TestCase {
-	/**
-	 * The original argv.
-	 *
-	 * @var array<string>
-	 */
-	protected static array $argv;
-
-	/**
-	 * Set up before class.
-	 */
-	public static function setUpBeforeClass(): void {
-		// Store argv for restoring after we're done.
-		static::$argv = $_SERVER['argv']; // phpcs:ignore
-
-		// Ensure PHPCS is loaded.
-		$reflection = new \ReflectionClass( \Composer\Autoload\ClassLoader::class );
-		$vendor_dir = dirname( dirname( $reflection->getFileName() ) );
-
-		require_once $vendor_dir . '/squizlabs/php_codesniffer/autoload.php';
-	}
-
-	/**
-	 * Tear down after class.
-	 */
-	public static function tearDownAfterClass(): void {
-		// Restore argv.
-		$_SERVER['argv'] = static::$argv;
-	}
+	use PhpcsHelper;
 
 	/**
 	 * Test that fixtures pass.
@@ -51,23 +25,7 @@ class FixtureTest extends TestCase {
 	 */
 	#[DataProvider( 'passing_fixture_data_provider' )]
 	public function test_passing_fixtures( string $file ): void {
-		$this->assertFileExists( $file );
-
-		$base_path = dirname( __DIR__ );
-
-		$_SERVER['argv'] = [
-			"{$base_path}/vendor/bin/phpcs",
-			$file,
-			'-vsn',
-			'--no-cache',
-			"--standard={$base_path}/Alley-Interactive/ruleset.xml",
-		];
-
-		ob_start();
-		$exit_code = ( new Runner() )->runPHPCS();
-		$output    = ob_get_clean();
-
-		$this->assertSame( 0, $exit_code, $output );
+		$this->process_phpcs_output( $this->run_phpcs( $file ) );
 	}
 
 	/**
