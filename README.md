@@ -68,6 +68,10 @@ You can create a custom ruleset for your project that extends or customizes thes
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### Unreleased
+
+- Allow PSR-4 style `ClassName.php` file names to support our migration to PSR-4 for test files.
+
 ### 2.0.2
 
 - Fix issue with files with `js`/`css` in the path being ignored.
