@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  pull_request:
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run general tests
+      uses: alleyinteractive/action-test-general@develop
+
+    - name: Run PHP Tests
+      uses: alleyinteractive/action-test-php@develop
+      with:
+        skip-services: 'true'
+        wordpress-version: 'false'
