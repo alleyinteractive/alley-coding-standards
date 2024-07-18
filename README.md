@@ -17,9 +17,9 @@ This will install the latest compatible version of PHPCS, WPCS, and VIPCS to you
 You can also manually add this to your project's `composer.json` file as part of the `require` property:
 
 ```json
-	"require": {
-		"alleyinteractive/alley-coding-standards": "^2.0"
-	}
+"require": {
+	"alleyinteractive/alley-coding-standards": "^2.0"
+}
 ```
 
 ## Usage
@@ -33,9 +33,9 @@ vendor/bin/phpcs --standard=Alley-Interactive .
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```json
-	"scripts": {
-		"phpcs" : "phpcs --standard=Alley-Interactive ."
-	}
+"scripts": {
+	"phpcs" : "phpcs --standard=Alley-Interactive ."
+}
 ```
 
 Then use the following command:
