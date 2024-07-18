@@ -20,6 +20,8 @@
     <!-- Allow checking any capability. -->
     <exclude name="WordPress.WP.Capabilities.Undetermined" />
     <exclude name="WordPress.WP.Capabilities.Unknown" />
+    <!-- Disable the PEAR-style function call signature. -->
+    <exclude name="PEAR.Functions.FunctionCallSignature" />
   </rule>
 
   <!-- Use the VIP Go ruleset. -->
@@ -95,4 +97,17 @@
   <rule ref="WordPress.Files.FileName.InvalidClassFileName">
     <exclude-pattern>tests/*Test.php</exclude-pattern>
   </rule>
+
+  <!--
+  Replace PEAR.Functions.FunctionCallSignature with a sniff that supports
+  arguments on the same line as the function call while still requiring
+  spaces after the opening parenthesis and before the closing parenthesis.
+  -->
+  <rule ref="PSR2.Methods.FunctionCallSignature">
+		<properties>
+			<property name="requiredSpacesAfterOpen" value="1" />
+			<property name="requiredSpacesBeforeClose" value="1" />
+			<property name="allowMultipleArguments" value="true" />
+		</properties>
+	</rule>
 </ruleset>

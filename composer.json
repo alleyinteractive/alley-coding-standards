@@ -27,8 +27,8 @@
   },
   "scripts": {
     "phpcbf": "phpcbf --standard=Alley-Interactive tests/*Test.php",
-    "phpcs": "phpcs --standard=Alley-Interactive tests/*Test.php -vsn",
-    "phpcs:fixtures": "phpcs --standard=Alley-Interactive tests/fixtures",
+    "phpcs": "phpcs --standard=Alley-Interactive tests/*Test.php -sn",
+    "phpcs:fixtures": "phpcs -sn --standard=Alley-Interactive tests/fixtures",
     "phpunit": "phpunit",
     "test": [
       "@phpcs",

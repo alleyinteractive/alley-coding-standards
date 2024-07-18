@@ -50,7 +50,7 @@ You can also pass arguments to the composer phpcs script, following a `--` opera
 composer run phpcs -- --report=summary
 ```
 
-### Extending the ruleset
+### Extending the Ruleset
 
 You can create a custom ruleset for your project that extends or customizes
 these rules by creating your own `phpcs.xml` file in your project, which
@@ -67,6 +67,16 @@ references these rules, like this:
   <!-- Project customizations go here -->
 </ruleset>
 ```
+
+## Testing
+
+When contributing to this project, modifications to the ruleset should have a
+corresponding test in the `tests` directory. For the most part, this takes the
+form of a passing test in `tests/fixtures/pass` and a failing one in
+`tests/fixtures/fail`. You can run the tests with `composer phpunit`. If you
+want to run PHPCS against the test fixtures, you can run
+`composer phpcs:fixtures` to ensure that what is passing/failing matches your
+expectations.
 
 ## Changelog
 
