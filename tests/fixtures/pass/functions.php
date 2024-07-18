@@ -17,6 +17,14 @@ ai_method_call( [
 	'foo' => 'bar',
 ] );
 
+ai_method_call( [
+	'foo'     => 'bar',
+	'another' => 'test',
+	'depth'   => [
+		'one' => 'two',
+	],
+] );
+
 ai_method_call(
 	[
 		'foo' => 'bar',
