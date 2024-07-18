@@ -95,4 +95,24 @@
   <rule ref="WordPress.Files.FileName.InvalidClassFileName">
     <exclude-pattern>tests/*Test.php</exclude-pattern>
   </rule>
+
+  <!-- Allow snakeCase for DOMDocument/DOMElement properties -->
+  <rule ref="WordPress.NamingConventions.ValidVariableName">
+    <properties>
+      <property name="allowed_custom_properties" type="array">
+        <element value="className"/>
+        <element value="childNodes"/>
+        <element value="firstChild"/>
+        <element value="formatOutput"/>
+        <element value="lastChild"/>
+        <element value="nodeName"/>
+        <element value="nodeType"/>
+        <element value="nodeValue"/>
+        <element value="parentNode"/>
+        <element value="preserveWhiteSpace"/>
+        <element value="tagName"/>
+        <element value="textContent"/>
+      </property>
+    </properties>
+  </rule>
 </ruleset>

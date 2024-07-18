@@ -7,6 +7,7 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 ### Unreleased
 
 - Allow PSR-4 style `ClassName.php` file names to support our migration to PSR-4 for test files.
+- Allow camelCase'd DOMDocument/DOMElement/etc. property names to not be flagged by `WordPress.NamingConventions.ValidVariableName`.
 
 ### 2.0.2
 
