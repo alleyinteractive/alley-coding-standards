@@ -26,7 +26,7 @@ trait PhpcsHelper {
 
 		$base_path = dirname( __DIR__ );
 		$shell     = sprintf(
-			'%s %s %s --standard=%s --no-cache --report=json',
+			'%s %s "%s" --standard=%s --no-cache --report=json',
 			PHP_BINARY,
 			"{$base_path}/vendor/bin/phpcs",
 			$file,

@@ -4,9 +4,12 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
-### Unreleased
+### 2.1.0
 
 - Allow PSR-4 style `ClassName.php` file names to support our migration to PSR-4 for test files.
+- Remove the `PEAR.Functions.FunctionCallSignature` sniff from the ruleset and
+  replace it with `PSR2.Methods.FunctionCallSignature`. This change is to allow
+  for multi-line function calls to be formatted in a more readable way without having to insert a new line before the first argument.
 - Allow camelCase'd DOMDocument/DOMElement/etc. property names to not be flagged by `WordPress.NamingConventions.ValidVariableName`.
 
 ### 2.0.2

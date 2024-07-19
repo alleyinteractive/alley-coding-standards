@@ -10,3 +10,26 @@ $ai_function = function () {
 };
 
 echo esc_html( $ai_function() );
+
+// Allow function arguments on the same line as the function call.
+// Supports PSR2.Methods.FunctionCallSignature.
+ai_method_call( [
+	'foo' => 'bar',
+] );
+
+ai_method_call( [
+	'foo'     => 'bar',
+	'another' => 'test',
+	'depth'   => [
+		'one' => 'two',
+	],
+] );
+
+ai_method_call(
+	[
+		'foo' => 'bar',
+	]
+);
+
+ai_method_call( [ 'foo' => 'bar' ] );
+ai_method_call();
