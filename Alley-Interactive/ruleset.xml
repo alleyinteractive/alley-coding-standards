@@ -25,7 +25,8 @@
   </rule>
 
   <!-- Use the VIP Go ruleset. -->
-  <rule ref="WordPress-VIP-Go" />
+  <!-- <rule ref="WordPress-VIP-Go" /> -->
+  <rule ref="WordPressVIPMinimum" />
 
   <!-- Use the PHPCompatibilityWP rules -->
   <rule ref="PHPCompatibilityWP" />
