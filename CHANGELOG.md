@@ -2,7 +2,11 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
-This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
+### 2.2.0
+
+- Added sniff to detect the usage of short PHP echo tags (`<?=`) and require the
+  use of the full PHP echo tags (`<?php echo`):
+  `Alley.PHP.DisallowShortEchoTag.Found`.
 
 ### 2.1.0
 

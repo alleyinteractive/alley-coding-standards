@@ -44,7 +44,7 @@ class FixtureTest extends TestCase {
 	 * @return array<string>
 	 */
 	public static function passing_fixture_data_provider(): array {
-		return array_map( fn ( $file ) => [ $file ], self::get_files_in_directory( __DIR__ . '/fixtures/pass' ) );
+		return self::get_files_in_directory( __DIR__ . '/fixtures/pass' );
 	}
 
 	/**
@@ -53,7 +53,7 @@ class FixtureTest extends TestCase {
 	 * @return array<array<string|array<string>>>
 	 */
 	public static function failing_fixture_data_provider(): array {
-		return array_map( fn ( $file ) => [ $file ], self::get_files_in_directory( __DIR__ . '/fixtures/fail' ) );
+		return self::get_files_in_directory( __DIR__ . '/fixtures/fail' );
 	}
 
 	/**
@@ -67,6 +67,18 @@ class FixtureTest extends TestCase {
 			return [];
 		}
 
-		return glob( $directory . '/*' );
+		$files = glob( $directory . '/*' );
+
+		if ( ! is_array( $files ) ) {
+			return [];
+		}
+
+		$data = [];
+
+		foreach ( $files as $file ) {
+			$data[ basename( $file ) ] = [ $file ];
+		}
+
+		return $data;
 	}
 }
