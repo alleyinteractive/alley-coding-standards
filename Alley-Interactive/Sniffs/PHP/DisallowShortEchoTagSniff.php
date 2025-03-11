@@ -7,7 +7,7 @@
 
 namespace Alley\Sniffs\PHP;
 
-use Alley\CodingStandards\Sniffs\Sniff;
+use Alley\Sniffs\Sniff;
 use PHP_CodeSniffer\Files\File;
 
 /**

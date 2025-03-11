@@ -6,7 +6,7 @@
  * @link https://github.com/alleyinteractive/alley-coding-standards
  */
 
-namespace Alley\CodingStandards\Sniffs;
+namespace Alley\Sniffs;
 
 use WordPressCS\WordPress\Sniff as WPCS_Sniff;
 
