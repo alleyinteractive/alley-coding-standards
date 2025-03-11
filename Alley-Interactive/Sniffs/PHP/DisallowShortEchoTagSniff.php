@@ -11,9 +11,11 @@ use Alley\CodingStandards\Sniffs\Sniff;
 use PHP_CodeSniffer\Files\File;
 
 /**
- * Due to a limitation in PHPCS's DisallowShortOpenTagSniff sniff which will
- * allow the use of PHP's short echo tag `<?=` if `short_open_tag` is enabled,
- * we need to create a new sniff to disallow the short echo tag at all times.
+ * Prevents the use of PHP's short echo tag `<?=`.
+ *
+ * Created due to a limitation in PHPCS's DisallowShortOpenTagSniff sniff, which
+ * allows the use of PHP's short echo tag `<?=` if `short_open_tag` is enabled
+ * in your `php.ini`. This sniff will disallow the short echo tag all the time.
  *
  * This rule exists as `Alley.PHP.DisallowShortEchoTag.Found` and can be ignored
  * in a file by adding `// phpcs:ignore Alley.PHP.DisallowShortEchoTag.Found`.
