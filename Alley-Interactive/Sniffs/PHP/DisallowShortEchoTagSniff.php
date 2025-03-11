@@ -7,8 +7,8 @@
 
 namespace Alley\Sniffs\PHP;
 
-use Alley\Sniffs\Sniff;
 use PHP_CodeSniffer\Files\File;
+use WordPressCS\WordPress\Sniff;
 
 /**
  * Prevents the use of PHP's short echo tag `<?=`.
