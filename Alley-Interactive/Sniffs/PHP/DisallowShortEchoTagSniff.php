@@ -7,7 +7,6 @@
 
 namespace Alley\Sniffs\PHP;
 
-use PHP_CodeSniffer\Files\File;
 use WordPressCS\WordPress\Sniff;
 
 /**
@@ -37,8 +36,7 @@ class DisallowShortEchoTagSniff extends Sniff {
 	 *
 	 * Any detected short echo tags will be flagged as an error.
 	 *
-	 * @param File $file The file being scanned.
-	 * @param int  $stack_ptr The position of the current token in the stack passed in $tokens.
+	 * @param int $stack_ptr The position of the current token in the stack.
 	 */
 	public function process_token( $stackPtr ) {
 		$error = 'Short echo tag (<?=) is not allowed. Use full PHP tags with echo instead.';

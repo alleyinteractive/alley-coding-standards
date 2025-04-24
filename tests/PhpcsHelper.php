@@ -108,5 +108,4 @@ trait PhpcsHelper {
 			$this->fail( 'Test did not fail as expected' );
 		}
 	}
-
 }
