@@ -2,6 +2,10 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.3.0
+
+- Disabled Yoda conditions.
+
 ### 2.2.0
 
 - Added sniff to detect the usage of short PHP echo tags (`<?=`) and require the
