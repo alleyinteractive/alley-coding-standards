@@ -4,6 +4,9 @@ This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/)
 
 ### 2.3.0
 
+- Added sniff to warn about whitespaces in `declare( strict_types = 1 );` declarations and require
+  them to be removed `declare(strict_types=1);`:
+  `Alley.PHP.StrictTypeDeclarationSpacing.SpaceBeforeCloseParenthesis`.
 - Disabled Yoda conditions.
 
 ### 2.2.0

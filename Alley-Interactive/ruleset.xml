@@ -13,7 +13,7 @@
     <exclude name="Universal.Arrays.DisallowShortArraySyntax" />
     <!-- Allow short ternary expressions -->
     <exclude name="Universal.Operators.DisallowShortTernary.Found" />
-    <!-- Allow any name to be used as a function paramater name. -->
+    <!-- Allow any name to be used as a function parameter name. -->
     <exclude name="Universal.NamingConventions.NoReservedKeywordParameterNames" />
     <!-- Allow post-increment/decrement vs disallowing it. -->
     <exclude name="Universal.Operators.DisallowStandalonePostIncrementDecrement" />
@@ -33,9 +33,7 @@
   <!-- Check for cross-version support for PHP 8.1 and higher. -->
   <config name="testVersion" value="8.1-"/>
 
-  <!--
-  Alley specific customizations.
-  -->
+  <!-- Alley specific customizations. -->
 
   <!-- We prefer short array syntax. -->
   <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
@@ -54,7 +52,7 @@
       <property name="prefixes" type="array" value="wp_starter_theme,ai_,_ai" />
     </properties>
 
-    <!-- In practice, partials should be loaded outside of the global namespace with get_template_part(). -->
+    <!-- In practice, partials should be loaded outside the global namespace with get_template_part(). -->
     <exclude-pattern>template-parts/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>
   </rule>
