@@ -57,5 +57,25 @@ class StrictTypeDeclarationSpacingSniff extends Sniff {
 				}
 			}
 		}
+
+		// Check for space before the = sign.
+		$equalsPtr = $this->phpcsFile->findNext(T_EQUAL, $strictTypePtr + 1);
+		if ($equalsPtr !== false && $tokens[$equalsPtr - 1]['code'] === T_WHITESPACE) {
+			$error = 'No space allowed before equals sign in strict_types declaration';
+			$fix   = $this->phpcsFile->addFixableError($error, $equalsPtr - 1, 'SpaceBeforeEquals');
+			if ($fix) {
+				$this->phpcsFile->fixer->replaceToken($equalsPtr - 1, '');
+			}
+		}
+
+		// Check for space after the = sign.
+		$nextTokenPtr = $equalsPtr + 1;
+		if ($nextTokenPtr < count($tokens) && $tokens[$nextTokenPtr]['code'] === T_WHITESPACE) {
+			$error = 'No space allowed after equals sign in strict_types declaration';
+			$fix   = $this->phpcsFile->addFixableError($error, $nextTokenPtr, 'SpaceAfterEquals');
+			if ($fix) {
+				$this->phpcsFile->fixer->replaceToken($nextTokenPtr, '');
+			}
+		}
 	}
 }
