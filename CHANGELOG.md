@@ -2,6 +2,11 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.3.1
+
+- Updated `StrictTypeDeclarationSpacingSniff` to remove additional space.
+- Address deprecated warnings and notices.
+
 ### 2.3.0
 
 - Added sniff to warn about whitespaces in `declare( strict_types = 1 );` declarations and require
