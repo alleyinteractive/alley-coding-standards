@@ -60,8 +60,7 @@
   <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
     <properties>
       <property name="prefixes" type="array">
-        <element value="_ai"/>
-        <element value="ai_"/>
+        <element value="alley_"/>
         <element value="wp_starter_theme"/>
       </property>
     </properties>

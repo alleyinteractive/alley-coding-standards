@@ -5,11 +5,11 @@
  * @package Alley\WP\Coding_Standards
  */
 
-$ai_function = function () {
+$alley_function = function () {
 	return 'Hello, World!';
 };
 
-echo esc_html( $ai_function() );
+echo esc_html( $alley_function() );
 
 // Allow function arguments on the same line as the function call.
 // Supports PSR2.Methods.FunctionCallSignature.

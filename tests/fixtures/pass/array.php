@@ -5,4 +5,4 @@
  * @package Alley\WP\Coding_Standards
  */
 
-$ai_example = [ 1, 2, 3 ];
+$alley_example = [ 1, 2, 3 ];

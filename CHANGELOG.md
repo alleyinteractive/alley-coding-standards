@@ -2,6 +2,12 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.4.0
+
+- **Breaking Change:** Using `ai_` as a prefix for global variables is no longer
+  allowed. Use `alley_` instead or a project-specific variant.
+- Upgrade to `wp-coding-standards/wpcs` 3.2.0.
+
 ### 2.3.2
 
 - Lock `wp-coding-standards/wpcs` to 3.1.0 to avoid issues with the latest version.

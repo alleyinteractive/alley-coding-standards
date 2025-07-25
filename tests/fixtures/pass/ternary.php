@@ -7,5 +7,5 @@
  * @package Alley\WP\Coding_Standards
  */
 
-$ai_initial = true;
-$ai_result  = $ai_initial ?: 'value';
+$alley_initial = true;
+$alley_result  = $alley_initial ?: 'value';
