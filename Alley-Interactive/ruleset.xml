@@ -40,6 +40,10 @@
     <exclude name="WordPress.PHP.YodaConditions.NotYoda.Found" />
     <!-- We prefer short array syntax. -->
     <exclude name="Universal.Arrays.DisallowShortArraySyntax.Found"/>
+    <!-- Allow short global prefixes. -->
+    <exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed" />
+    <!-- Allow meta calls without having to pass single = true. -->
+    <exclude name="WordPress.WP.GetMetaSingle.Missing" />
   </rule>
 
   <!-- For context: https://github.com/Automattic/VIP-Coding-Standards/issues/442 -->

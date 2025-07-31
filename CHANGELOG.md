@@ -2,6 +2,11 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.3.2
+
+- Lock `wp-coding-standards/wpcs` to 3.1.0 to avoid issues with the latest version.
+- Remove `WordPress.WP.GetMetaSingle.Missing` sniff that will be introduced in WPCS 3.2.0.
+
 ### 2.3.1
 
 - Updated `StrictTypeDeclarationSpacingSniff` to remove additional space.
