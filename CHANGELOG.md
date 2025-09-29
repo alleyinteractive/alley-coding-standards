@@ -2,6 +2,9 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+### 2.3.3
+- Changed: Improves tests to ensure tests expected to fail only fail for expected reasons.
+
 ### 2.3.2
 
 - Lock `wp-coding-standards/wpcs` to 3.1.0 to avoid issues with the latest version.
