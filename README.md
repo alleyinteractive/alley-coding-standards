@@ -73,11 +73,19 @@ references these rules, like this:
 When contributing to this project, modifications to the ruleset should have a
 corresponding test in the `tests` directory. For the most part, this takes the
 form of a passing test in `tests/fixtures/pass` and a failing one in
-`tests/fixtures/fail`. You can run the tests with `composer phpunit`. If you
+`tests/fixtures/fail`.
+
+You can run the tests with `composer phpunit`. If you
 want to run PHPCS against the test fixtures, you can run
 `composer phpcs:fixtures` to ensure that what is passing/failing matches your
-expectations. For failing fixtures in `tests/fixtures/fail`, we recommend
+expectations.
+
+### Special Considerations for failure expectations
+For failing fixtures in `tests/fixtures/fail`, we recommend
 keeping the files smaller and focused on the specific sniff being tested.
+A corresponding file should be created in `tests/fixtures/fail/expectations`
+referencing the expected source of the failures for that test file. Name the file
+the same as you do the fixture (e.g. `tests/fixtures/fail/foo.php` and `tests/fixtures/fail/expectations/foo.php`).
 
 ## Changelog
 

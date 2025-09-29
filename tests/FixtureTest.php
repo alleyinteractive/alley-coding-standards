@@ -32,10 +32,22 @@ class FixtureTest extends TestCase {
 	 * Test that fixtures fail.
 	 *
 	 * @param string $file The file to test.
+	 * @param string $expectation The expectations file for this test.
 	 */
 	#[DataProvider( 'failing_fixture_data_provider' )]
-	public function test_failing_fixtures( string $file ): void {
-		$this->process_phpcs_output( $this->run_phpcs( $file ), expect_to_fail: true );
+	public function test_failing_fixtures( string $file, ?string $expectation = null ): void {
+
+		$expectations = [];
+
+		if ( ! empty( $expectation ) && file_exists( $expectation ) ) {
+			$expectations = include $expectation;
+		}
+
+		$this->process_phpcs_output(
+			$this->run_phpcs( $file ),
+			ignored_errors: $expectations,
+			expect_to_fail: true
+		);
 	}
 
 	/**
@@ -53,7 +65,19 @@ class FixtureTest extends TestCase {
 	 * @return array<array<string|array<string>>>
 	 */
 	public static function failing_fixture_data_provider(): array {
-		return self::get_files_in_directory( __DIR__ . '/fixtures/fail' );
+		$data         = self::get_files_in_directory( __DIR__ . '/fixtures/fail' );
+		$expectations = self::get_files_in_directory( __DIR__ . '/fixtures/fail/expectations' );
+
+		foreach ( $data as $key => $data_set ) {
+			if ( ! isset( $expectations[ $key ] ) ) {
+				$data[ $key ][] = null;
+				continue;
+			}
+
+			$data[ $key ][] = $expectations[ $key ][0];
+		}
+
+		return $data;
 	}
 
 	/**
@@ -76,6 +100,10 @@ class FixtureTest extends TestCase {
 		$data = [];
 
 		foreach ( $files as $file ) {
+			if ( is_dir( $file ) ) {
+				continue;
+			}
+
 			$data[ basename( $file ) ] = [ $file ];
 		}
 

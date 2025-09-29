@@ -30,6 +30,7 @@
     "phpcbf": "phpcbf --standard=Alley-Interactive tests/*Test.php",
     "phpcs": "phpcs --standard=Alley-Interactive tests/*Test.php -sn",
     "phpcs:fixtures": "phpcs -sn --standard=Alley-Interactive tests/fixtures",
+    "phpcs:expectations": "phpcs -sn --standard=Alley-Interactive tests/fixtures/fail/expectations",
     "phpunit": "phpunit",
     "test": [
       "@phpcs",
