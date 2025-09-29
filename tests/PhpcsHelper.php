@@ -76,13 +76,6 @@ trait PhpcsHelper {
 			);
 
 			if ( ! empty( $unexpected_messages ) ) {
-				// Bail if we expect the test to fail and there are errors.
-				if ( $expect_to_fail ) {
-					$this->assertTrue( true );
-
-					return;
-				}
-
 				$this->fail(
 					sprintf(
 						'Unexpected errors found in %s: %s',
@@ -104,8 +97,12 @@ trait PhpcsHelper {
 			),
 		);
 
-		if ( $expect_to_fail ) {
+		if ( $expect_to_fail && empty( $errors ) ) {
 			$this->fail( 'Test did not fail as expected' );
+		} else if ( $expect_to_fail && ! empty( $errors ) ) {
+			$this->assertNotEmpty( $errors );
+		} else {
+			$this->assertEmpty( $errors );
 		}
 	}
 }
