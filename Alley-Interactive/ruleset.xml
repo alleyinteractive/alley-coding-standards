@@ -5,9 +5,6 @@
   <!-- Use the VIP Go ruleset. -->
   <rule ref="WordPress-VIP-Go" />
 
-  <!-- Use the PHPCompatibilityWP rules -->
-  <rule ref="PHPCompatibilityWP" />
-
   <!-- Check for cross-version support for PHP 8.1 and higher. -->
   <config name="testVersion" value="8.1-"/>
 

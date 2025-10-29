@@ -9,7 +9,6 @@
   ],
   "require": {
     "automattic/vipwpcs": "^3.0",
-    "phpcompatibility/phpcompatibility-wp": "^2.1.4",
     "wp-coding-standards/wpcs": ">=3.1.0 <3.2.0"
   },
   "require-dev": {
