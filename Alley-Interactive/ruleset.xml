@@ -69,6 +69,11 @@
     <exclude-pattern>vendor/</exclude-pattern>
   </rule>
 
+  <!-- Allow unescaped output in test files. -->
+  <rule ref="WordPress.Security.EscapeOutput.OutputNotEscaped">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
+
   <!-- Keep common boilerplate code from triggering an error. -->
   <rule ref="Squiz.Commenting.FileComment.SpacingAfterComment">
     <!--
@@ -102,6 +107,16 @@
   <!-- Allow PSR-4 file format for test files -->
   <rule ref="WordPress.Files.FileName.InvalidClassFileName">
     <exclude-pattern>tests/*Test.php</exclude-pattern>
+  </rule>
+
+  <!-- Allow non-prefixed classes in test files -->
+  <rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
+
+  <!-- Remove commenting requirements from test files -->
+  <rule ref="Squiz.Commenting">
+    <exclude-pattern>tests/*</exclude-pattern>
   </rule>
 
   <!--
