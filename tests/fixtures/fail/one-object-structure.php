@@ -8,7 +8,7 @@
 /**
  * Example class.
  */
-class AI_Example {
+class Alley_Example {
 	/**
 	 * Example property.
 	 *
@@ -29,7 +29,7 @@ class AI_Example {
 /**
  * Example class.
  */
-class AI_Another_Example {
+class Alley_Another_Example {
 	/**
 	 * Example property.
 	 *

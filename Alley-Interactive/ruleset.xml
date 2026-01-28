@@ -41,6 +41,8 @@
     <exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed" />
     <!-- Allow meta calls without having to pass single = true. -->
     <exclude name="WordPress.WP.GetMetaSingle.Missing" />
+    <!-- Remove long condition comment requirement. -->
+    <exclude name="Squiz.Commenting.LongConditionClosingComment" />
   </rule>
 
   <!-- For context: https://github.com/Automattic/VIP-Coding-Standards/issues/442 -->
@@ -59,15 +61,19 @@
   <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
     <properties>
       <property name="prefixes" type="array">
-        <element value="_ai"/>
-        <element value="ai_"/>
-        <element value="wp_starter_theme"/>
+        <element value="alley_"/>
       </property>
     </properties>
 
     <!-- In practice, partials should be loaded outside the global namespace with get_template_part(). -->
+    <exclude-pattern>blocks/</exclude-pattern>
     <exclude-pattern>template-parts/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>
+  </rule>
+
+  <!-- Allow unescaped output in test files. -->
+  <rule ref="WordPress.Security.EscapeOutput.OutputNotEscaped">
+    <exclude-pattern>tests/*</exclude-pattern>
   </rule>
 
   <!-- Keep common boilerplate code from triggering an error. -->
@@ -103,6 +109,21 @@
   <!-- Allow PSR-4 file format for test files -->
   <rule ref="WordPress.Files.FileName.InvalidClassFileName">
     <exclude-pattern>tests/*Test.php</exclude-pattern>
+  </rule>
+
+  <!-- Allow non-prefixed classes in test files -->
+  <rule ref="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
+
+  <!-- Remove commenting requirements from test files -->
+  <rule ref="Squiz.Commenting">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
+
+  <!-- Remove DB requirements from test files -->
+  <rule ref="WordPress.DB">
+    <exclude-pattern>tests/*</exclude-pattern>
   </rule>
 
   <!--
