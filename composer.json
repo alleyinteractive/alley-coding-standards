@@ -11,7 +11,8 @@
     "automattic/vipwpcs": "^3.0"
   },
   "require-dev": {
-    "phpunit/phpunit": "^12"
+    "phpunit/phpunit": "^12",
+    "symfony/finder": "^7.4"
   },
   "autoload-dev": {
     "psr-4": {

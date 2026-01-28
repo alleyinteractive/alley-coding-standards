@@ -11,6 +11,7 @@ namespace Alley\WP\Coding_Standards\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Fixture Test
@@ -65,8 +66,8 @@ class FixtureTest extends TestCase {
 	 * @return array<array<string|array<string>>>
 	 */
 	public static function failing_fixture_data_provider(): array {
-		$data         = self::get_files_in_directory( __DIR__ . '/fixtures/fail' );
-		$expectations = self::get_files_in_directory( __DIR__ . '/fixtures/fail/expectations' );
+		$data         = self::get_files_in_directory( __DIR__ . '/fixtures/fail', '== 0' );
+		$expectations = self::get_files_in_directory( __DIR__ . '/fixtures/fail/expectations', '== 0' );
 
 		foreach ( $data as $key => $data_set ) {
 			if ( ! isset( $expectations[ $key ] ) ) {
@@ -84,27 +85,27 @@ class FixtureTest extends TestCase {
 	 * Returns an array of fixtures that should fail.
 	 *
 	 * @param string $directory The directory to get files from.
+	 * @param int    $depth The depth to search.
 	 * @return array<string>
 	 */
-	protected static function get_files_in_directory( string $directory ): array {
+	protected static function get_files_in_directory( string $directory, ?string $depth = null ): array {
 		if ( ! is_dir( $directory ) ) {
 			return [];
 		}
 
-		$files = glob( $directory . '/*' );
+		$finder = Finder::create()
+			->files()
+			->in( $directory )
+			->name( '*.php' );
 
-		if ( ! is_array( $files ) ) {
-			return [];
+		if ( null !== $depth ) {
+			$finder->depth($depth);
 		}
 
 		$data = [];
 
-		foreach ( $files as $file ) {
-			if ( is_dir( $file ) ) {
-				continue;
-			}
-
-			$data[ basename( $file ) ] = [ $file ];
+		foreach ( $finder as $file ) {
+			$data[ $file->getBasename() ] = [ $file->getRealPath() ];
 		}
 
 		return $data;
