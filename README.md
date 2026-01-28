@@ -1,4 +1,4 @@
-++# Alley Coding Standards
+# Alley Coding Standards
 
 [![Example of a badge pointing to the readme standard spec](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
