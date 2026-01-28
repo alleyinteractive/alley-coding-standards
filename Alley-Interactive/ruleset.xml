@@ -41,6 +41,8 @@
     <exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed" />
     <!-- Allow meta calls without having to pass single = true. -->
     <exclude name="WordPress.WP.GetMetaSingle.Missing" />
+    <!-- Remove long condition comment requirement. -->
+    <exclude name="Squiz.Commenting.LongConditionClosingComment" />
   </rule>
 
   <!-- For context: https://github.com/Automattic/VIP-Coding-Standards/issues/442 -->
