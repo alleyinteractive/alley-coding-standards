@@ -119,6 +119,11 @@
     <exclude-pattern>tests/*</exclude-pattern>
   </rule>
 
+  <!-- Remove DB requirements from test files -->
+  <rule ref="WordPress.DB">
+    <exclude-pattern>tests/*</exclude-pattern>
+  </rule>
+
   <!--
   Replace PEAR.Functions.FunctionCallSignature with a sniff that supports
   arguments on the same line as the function call while still requiring
