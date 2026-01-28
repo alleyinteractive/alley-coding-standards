@@ -59,13 +59,12 @@
   <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
     <properties>
       <property name="prefixes" type="array">
-        <element value="_ai"/>
-        <element value="ai_"/>
-        <element value="wp_starter_theme"/>
+        <element value="alley_"/>
       </property>
     </properties>
 
     <!-- In practice, partials should be loaded outside the global namespace with get_template_part(). -->
+    <exclude-pattern>blocks/</exclude-pattern>
     <exclude-pattern>template-parts/</exclude-pattern>
     <exclude-pattern>vendor/</exclude-pattern>
   </rule>

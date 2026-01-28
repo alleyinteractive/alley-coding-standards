@@ -23,6 +23,8 @@ in your project's `composer.json` file like this:
 
 - Drops the package's requirement on a specific version of `wp-coding-standards/wpcs`. Will now
   install the latest compatible version used by `automattic/vipwpcs`.
+- Drop `WordPress.NamingConventions.PrefixAllGlobals` sniff from `blocks/` directory to allow for
+  any variable naming conventions in block files.
 - Improves tests to ensure tests expected to fail only fail for expected reasons.
 - Drops `phpcompatibility/phpcompatibility-wp` as a dependency.
 
