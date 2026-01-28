@@ -37,7 +37,6 @@ class FixtureTest extends TestCase {
 	 */
 	#[DataProvider( 'failing_fixture_data_provider' )]
 	public function test_failing_fixtures( string $file, ?string $expectation = null ): void {
-
 		$expectations = [];
 
 		if ( ! empty( $expectation ) && file_exists( $expectation ) ) {
