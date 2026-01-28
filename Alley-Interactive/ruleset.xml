@@ -43,6 +43,8 @@
     <exclude name="WordPress.WP.GetMetaSingle.Missing" />
     <!-- Remove long condition comment requirement. -->
     <exclude name="Squiz.Commenting.LongConditionClosingComment" />
+    <!-- Remove sniff that is flagging phpstan-ignore-line comments. -->
+    <exclude name="Squiz.Commenting.PostStatementComment" />
   </rule>
 
   <!-- For context: https://github.com/Automattic/VIP-Coding-Standards/issues/442 -->
