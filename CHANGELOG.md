@@ -27,6 +27,7 @@ in your project's `composer.json` file like this:
   any variable naming conventions in block files.
 - Improves tests to ensure tests expected to fail only fail for expected reasons.
 - Drops `phpcompatibility/phpcompatibility-wp` as a dependency.
+- Relax rules for test files.
 
 ## 2.3.2
 
