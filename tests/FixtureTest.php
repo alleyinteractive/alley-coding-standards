@@ -83,8 +83,8 @@ class FixtureTest extends TestCase {
 	/**
 	 * Returns an array of fixtures that should fail.
 	 *
-	 * @param string $directory The directory to get files from.
-	 * @param int    $depth The depth to search.
+	 * @param string      $directory The directory to get files from.
+	 * @param string|null $depth The depth to search.
 	 * @return array<string>
 	 */
 	protected static function get_files_in_directory( string $directory, ?string $depth = null ): array {
@@ -98,7 +98,7 @@ class FixtureTest extends TestCase {
 			->name( '*.php' );
 
 		if ( null !== $depth ) {
-			$finder->depth($depth);
+			$finder->depth( $depth );
 		}
 
 		$data = [];
