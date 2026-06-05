@@ -8,5 +8,5 @@
  */
 
 // Named function with parameter typehint and return type, registered as a string callback.
-function alley_typed_named_fix_callback( $arg ) {}
+function alley_typed_named_fix_callback( $arg ): void {}
 add_action( 'init', 'alley_typed_named_fix_callback' );

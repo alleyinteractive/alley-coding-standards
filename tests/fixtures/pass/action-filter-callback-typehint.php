@@ -10,8 +10,13 @@ add_action( 'init', function ( $arg ) {
 	// Body.
 } );
 
-// Closure without return type — must not be flagged.
+// Closure without parameter typehint — must not be flagged.
 add_filter( 'the_content', function ( $content ) {
+	return (string) $content;
+} );
+
+// Closure with return type but no parameter typehint — must not be flagged.
+add_filter( 'the_content', function ( $content ): string {
 	return (string) $content;
 } );
 

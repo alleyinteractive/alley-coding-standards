@@ -22,7 +22,6 @@ use WordPressCS\WordPress\Sniff;
  *
  * Error codes:
  *  - Alley.PHP.ActionFilterCallbackTypehint.ParameterTypehint
- *  - Alley.PHP.ActionFilterCallbackTypehint.ReturnTypehint
  */
 class ActionFilterCallbackTypehintSniff extends Sniff {
 
@@ -298,7 +297,7 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 	}
 
 	/**
-	 * Checks a function/closure for parameter typehints and return type declarations.
+	 * Checks a function/closure for parameter typehints.
 	 *
 	 * @param int $function_token Position of the T_FUNCTION / T_CLOSURE / T_FN token.
 	 */
@@ -325,31 +324,6 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 					}
 					$this->phpcsFile->fixer->endChangeset();
 				}
-			}
-		}
-
-		$properties = $this->phpcsFile->getMethodProperties( $function_token );
-		if ( ! empty( $properties['return_type'] ) ) {
-			$fix = $this->phpcsFile->addFixableError(
-				'Return type declarations on action/filter callbacks can cause fatal errors if the returned type changes. Remove the return type declaration.',
-				$properties['return_type_token'],
-				'ReturnTypehint'
-			);
-
-			if ( $fix ) {
-				$this->phpcsFile->fixer->beginChangeset();
-				$colon = $this->phpcsFile->findPrevious( T_COLON, $properties['return_type_token'] - 1 );
-				// Remove any whitespace between the closing paren and the colon.
-				$ptr = $colon - 1;
-				while ( isset( $tokens[ $ptr ] ) && T_WHITESPACE === $tokens[ $ptr ]['code'] ) {
-					$this->phpcsFile->fixer->replaceToken( $ptr, '' );
-					$ptr--;
-				}
-				// Remove from the colon through the end of the return type (covers nullable ? and union tokens).
-				for ( $i = $colon; $i <= $properties['return_type_end_token']; $i++ ) {
-					$this->phpcsFile->fixer->replaceToken( $i, '' );
-				}
-				$this->phpcsFile->fixer->endChangeset();
 			}
 		}
 	}

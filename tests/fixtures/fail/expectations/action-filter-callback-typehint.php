@@ -7,5 +7,4 @@
 
 return [
 	'Alley.PHP.ActionFilterCallbackTypehint.ParameterTypehint',
-	'Alley.PHP.ActionFilterCallbackTypehint.ReturnTypehint',
 ];
