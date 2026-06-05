@@ -303,23 +303,54 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 	 * @param int $function_token Position of the T_FUNCTION / T_CLOSURE / T_FN token.
 	 */
 	private function check_for_typehints( int $function_token ) {
+		$tokens = $this->phpcsFile->getTokens();
+
 		foreach ( $this->phpcsFile->getMethodParameters( $function_token ) as $param ) {
 			if ( ! empty( $param['type_hint'] ) ) {
-				$this->phpcsFile->addError(
+				$fix = $this->phpcsFile->addFixableError(
 					'Typehints on action/filter callback parameters can cause fatal errors if the passed type changes. Use type checking within the function body instead.',
 					$param['type_hint_token'],
 					'ParameterTypehint'
 				);
+
+				if ( $fix ) {
+					$this->phpcsFile->fixer->beginChangeset();
+					for ( $i = $param['type_hint_token']; $i <= $param['type_hint_end_token']; $i++ ) {
+						$this->phpcsFile->fixer->replaceToken( $i, '' );
+					}
+					$ptr = $param['type_hint_end_token'] + 1;
+					while ( isset( $tokens[ $ptr ] ) && T_WHITESPACE === $tokens[ $ptr ]['code'] ) {
+						$this->phpcsFile->fixer->replaceToken( $ptr, '' );
+						$ptr++;
+					}
+					$this->phpcsFile->fixer->endChangeset();
+				}
 			}
 		}
 
 		$properties = $this->phpcsFile->getMethodProperties( $function_token );
 		if ( ! empty( $properties['return_type'] ) ) {
-			$this->phpcsFile->addError(
+			$fix = $this->phpcsFile->addFixableError(
 				'Return type declarations on action/filter callbacks can cause fatal errors if the returned type changes. Remove the return type declaration.',
 				$properties['return_type_token'],
 				'ReturnTypehint'
 			);
+
+			if ( $fix ) {
+				$this->phpcsFile->fixer->beginChangeset();
+				$colon = $this->phpcsFile->findPrevious( T_COLON, $properties['return_type_token'] - 1 );
+				// Remove any whitespace between the closing paren and the colon.
+				$ptr = $colon - 1;
+				while ( isset( $tokens[ $ptr ] ) && T_WHITESPACE === $tokens[ $ptr ]['code'] ) {
+					$this->phpcsFile->fixer->replaceToken( $ptr, '' );
+					$ptr--;
+				}
+				// Remove from the colon through the end of the return type (covers nullable ? and union tokens).
+				for ( $i = $colon; $i <= $properties['return_type_end_token']; $i++ ) {
+					$this->phpcsFile->fixer->replaceToken( $i, '' );
+				}
+				$this->phpcsFile->fixer->endChangeset();
+			}
 		}
 	}
 }

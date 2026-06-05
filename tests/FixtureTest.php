@@ -51,6 +51,58 @@ class FixtureTest extends TestCase {
 	}
 
 	/**
+	 * Test that fixer fixtures produce zero errors after phpcbf runs and match expected output.
+	 *
+	 * The temp file is created alongside the source fixture so that ruleset
+	 * exclude-patterns for tests/* apply (e.g. Squiz.Commenting exclusions).
+	 *
+	 * @param string      $file     The file to test.
+	 * @param string|null $expected Path to the expected post-fix output file, or null if none.
+	 */
+	#[DataProvider( 'fixer_fixture_data_provider' )]
+	public function test_fixer_fixtures( string $file, ?string $expected = null ): void {
+		$temp_file = dirname( $file ) . '/phpcs-fix-' . uniqid() . '.php';
+		file_put_contents( $temp_file, file_get_contents( $file ) );
+
+		try {
+			$this->run_phpcbf( $temp_file );
+
+			if ( null !== $expected ) {
+				$this->assertStringEqualsFile(
+					$expected,
+					file_get_contents( $temp_file ),
+					sprintf( 'Fixed output does not match expected file: %s', basename( $expected ) )
+				);
+			}
+
+			$this->process_phpcs_output( $this->run_phpcs( $temp_file ) );
+		} finally {
+			unlink( $temp_file );
+		}
+	}
+
+	/**
+	 * Returns an array of fixer fixtures paired with their optional expected-output files.
+	 *
+	 * @return array<array<string|null>>
+	 */
+	public static function fixer_fixture_data_provider(): array {
+		$data     = self::get_files_in_directory( __DIR__ . '/fixtures/fix', '== 0' );
+		$expected = self::get_files_in_directory( __DIR__ . '/fixtures/fix/expected', '== 0' );
+
+		foreach ( $data as $key => $data_set ) {
+			if ( ! isset( $expected[ $key ] ) ) {
+				$data[ $key ][] = null;
+				continue;
+			}
+
+			$data[ $key ][] = $expected[ $key ][0];
+		}
+
+		return $data;
+	}
+
+	/**
 	 * Returns an array of fixtures that should pass.
 	 *
 	 * @return array<string>

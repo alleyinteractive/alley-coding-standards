@@ -16,6 +16,26 @@ namespace Alley\WP\Coding_Standards\Tests;
  */
 trait PhpcsHelper {
 	/**
+	 * Run PHPCBF on a file to auto-fix violations in place.
+	 *
+	 * @param string $file The file to run PHPCBF on.
+	 */
+	protected function run_phpcbf( string $file ): void {
+		$this->assertFileExists( $file );
+
+		$base_path = dirname( __DIR__ );
+		$shell     = sprintf(
+			'%s %s "%s" --standard=%s --no-cache',
+			PHP_BINARY,
+			"{$base_path}/vendor/bin/phpcbf",
+			$file,
+			"{$base_path}/Alley-Interactive/ruleset.xml"
+		);
+
+		shell_exec( $shell );
+	}
+
+	/**
 	 * Run PHPCS on a file and get the JSON output.
 	 *
 	 * @param string $file The file to run PHPCS on.
