@@ -8,7 +8,7 @@
 class Alley_Callback_Typehint_Fail {
 
 	public function setup() {
-		// First-class callable — method has parameter typehint and return type.
+		// First-class callable — method has parameter typehint.
 		add_filter( 'the_content', $this->filter_content( ... ) );
 	}
 
