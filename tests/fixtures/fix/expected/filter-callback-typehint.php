@@ -19,3 +19,8 @@ add_filter( 'the_excerpt', static function ( $arg ) {
 
 // Arrow function — parameter typehint.
 add_filter( 'the_title', fn( $title ): string => strtoupper( $title ) );
+
+// Multi-param closure — only first parameter typehint should be removed.
+add_filter( 'the_content', function ( $content, string $extra ) {
+	return $content . $extra;
+} );

@@ -48,3 +48,18 @@ add_action( 'save_post', static function ( int $post_id ) {
 
 function alley_typed_action_callback( string $hook ): void {}
 add_action( 'plugins_loaded', 'alley_typed_action_callback' );
+
+// First parameter with mixed typehint — must not be flagged.
+add_filter( 'the_title', function ( mixed $title ) {
+	return (string) $title;
+} );
+
+// Second parameter with typehint, first without — must not be flagged.
+add_filter( 'the_content', function ( $content, string $extra ) {
+	return $content . $extra;
+} );
+
+// Mixed first parameter with typehint on second — must not be flagged.
+add_filter( 'the_content', function ( mixed $content, string $extra ) {
+	return $content . $extra;
+} );

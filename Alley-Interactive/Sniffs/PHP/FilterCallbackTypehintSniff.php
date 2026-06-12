@@ -297,34 +297,50 @@ class FilterCallbackTypehintSniff extends Sniff {
 	}
 
 	/**
-	 * Checks a function/closure for parameter typehints.
+	 * Checks a function/closure for a typehint on the first parameter.
+	 *
+	 * Only the first parameter is checked. `mixed` is explicitly allowed because
+	 * it accurately documents that any type may arrive. Parameters after the first
+	 * are not checked.
 	 *
 	 * @param int $function_token Position of the T_FUNCTION / T_CLOSURE / T_FN token.
 	 */
 	private function check_for_typehints( int $function_token ) {
 		$tokens = $this->phpcsFile->getTokens();
+		$params = $this->phpcsFile->getMethodParameters( $function_token );
 
-		foreach ( $this->phpcsFile->getMethodParameters( $function_token ) as $param ) {
-			if ( ! empty( $param['type_hint'] ) ) {
-				$fix = $this->phpcsFile->addFixableError(
-					'Typehints on filter callback parameters can cause fatal errors if the passed type changes. Use type checking within the function body instead.',
-					$param['type_hint_token'],
-					'ParameterTypehint'
-				);
+		if ( empty( $params ) ) {
+			return;
+		}
 
-				if ( $fix ) {
-					$this->phpcsFile->fixer->beginChangeset();
-					for ( $i = $param['type_hint_token']; $i <= $param['type_hint_end_token']; $i++ ) {
-						$this->phpcsFile->fixer->replaceToken( $i, '' );
-					}
-					$ptr = $param['type_hint_end_token'] + 1;
-					while ( isset( $tokens[ $ptr ] ) && T_WHITESPACE === $tokens[ $ptr ]['code'] ) {
-						$this->phpcsFile->fixer->replaceToken( $ptr, '' );
-						$ptr++;
-					}
-					$this->phpcsFile->fixer->endChangeset();
-				}
+		$param = $params[0];
+
+		if ( empty( $param['type_hint'] ) ) {
+			return;
+		}
+
+		// `mixed` accurately reflects that any type may be passed; allow it.
+		if ( 'mixed' === $param['type_hint'] ) {
+			return;
+		}
+
+		$fix = $this->phpcsFile->addFixableError(
+			'Typehints on filter callback parameters can cause fatal errors if the passed type changes. Use type checking within the function body instead.',
+			$param['type_hint_token'],
+			'ParameterTypehint'
+		);
+
+		if ( $fix ) {
+			$this->phpcsFile->fixer->beginChangeset();
+			for ( $i = $param['type_hint_token']; $i <= $param['type_hint_end_token']; $i++ ) {
+				$this->phpcsFile->fixer->replaceToken( $i, '' );
 			}
+			$ptr = $param['type_hint_end_token'] + 1;
+			while ( isset( $tokens[ $ptr ] ) && T_WHITESPACE === $tokens[ $ptr ]['code'] ) {
+				$this->phpcsFile->fixer->replaceToken( $ptr, '' );
+				$ptr++;
+			}
+			$this->phpcsFile->fixer->endChangeset();
 		}
 	}
 }
