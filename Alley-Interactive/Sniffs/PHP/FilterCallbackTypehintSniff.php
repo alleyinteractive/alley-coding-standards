@@ -1,6 +1,6 @@
 <?php
 /**
- * ActionFilterCallbackTypehintSniff class file
+ * FilterCallbackTypehintSniff class file
  *
  * @package Alley\CodingStandards
  */
@@ -11,9 +11,9 @@ use PHP_CodeSniffer\Util\Tokens;
 use WordPressCS\WordPress\Sniff;
 
 /**
- * Flags typehints on action and filter callback functions.
+ * Flags typehints on filter callback functions.
  *
- * Typehints on WordPress action/filter callbacks are dangerous: the types passed
+ * Typehints on WordPress filter callbacks are dangerous: the types passed
  * by core or other plugins may not match the declared types, resulting in fatal
  * errors. Type checking should be done inside the callback body instead.
  *
@@ -21,9 +21,9 @@ use WordPressCS\WordPress\Sniff;
  * short/long array callbacks, and PHP 8.1 first-class callable syntax.
  *
  * Error codes:
- *  - Alley.PHP.ActionFilterCallbackTypehint.ParameterTypehint
+ *  - Alley.PHP.FilterCallbackTypehint.ParameterTypehint
  */
-class ActionFilterCallbackTypehintSniff extends Sniff {
+class FilterCallbackTypehintSniff extends Sniff {
 
 	/**
 	 * Token positions already checked in the current file, to avoid duplicate
@@ -57,12 +57,12 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 	public function process_token( $stackPtr ) {
 		$tokens = $this->phpcsFile->getTokens();
 
-		// Only process add_action() and add_filter() calls.
-		if ( ! in_array( $tokens[ $stackPtr ]['content'], [ 'add_action', 'add_filter' ], true ) ) {
+		// Only process add_filter() calls.
+		if ( 'add_filter' !== $tokens[ $stackPtr ]['content'] ) {
 			return;
 		}
 
-		// Skip method/property access (e.g. $obj->add_action() or Cls::add_filter()).
+		// Skip method/property access (e.g. $obj->add_filter() or Cls::add_filter()).
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $stackPtr - 1, null, true );
 		if ( false !== $prev && in_array( $tokens[ $prev ]['code'], [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON ], true ) ) {
 			return;
@@ -144,7 +144,7 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 	 *   - First-class callables (8.1):  $this->method(...), Cls::method(...), fn(...)
 	 *
 	 * @param int $callback_start    First token of the callback expression.
-	 * @param int $outer_close_paren Closing paren of the add_action/add_filter call.
+	 * @param int $outer_close_paren Closing paren of the add_filter call.
 	 * @return int|false
 	 */
 	private function resolve_function_token( int $callback_start, int $outer_close_paren ) {
@@ -243,7 +243,7 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 	 * current file.
 	 *
 	 * @param int $start_ptr        First token of the callable expression.
-	 * @param int $outer_close_paren Outer closing paren of the add_action/add_filter call.
+	 * @param int $outer_close_paren Outer closing paren of the add_filter call.
 	 * @return int|false
 	 */
 	private function resolve_first_class_callable( int $start_ptr, int $outer_close_paren ) {
@@ -307,7 +307,7 @@ class ActionFilterCallbackTypehintSniff extends Sniff {
 		foreach ( $this->phpcsFile->getMethodParameters( $function_token ) as $param ) {
 			if ( ! empty( $param['type_hint'] ) ) {
 				$fix = $this->phpcsFile->addFixableError(
-					'Typehints on action/filter callback parameters can cause fatal errors if the passed type changes. Use type checking within the function body instead.',
+					'Typehints on filter callback parameters can cause fatal errors if the passed type changes. Use type checking within the function body instead.',
 					$param['type_hint_token'],
 					'ParameterTypehint'
 				);

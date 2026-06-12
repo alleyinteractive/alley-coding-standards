@@ -1,6 +1,6 @@
 <?php
 /**
- * Action/filter callback typehint pass fixture.
+ * Filter callback typehint pass fixture.
  *
  * @package Alley\WP\Coding_Standards
  */
@@ -36,3 +36,15 @@ add_action( 'plugins_loaded', 'alley_untyped_callback' );
 function alley_utility_function( string $arg ): bool {
 	return strlen( $arg ) > 0;
 }
+
+// add_action callbacks WITH typehints — must not be flagged (actions are not checked).
+add_action( 'init', function ( string $arg ) {
+	// Body.
+} );
+
+add_action( 'save_post', static function ( int $post_id ) {
+	// Body.
+} );
+
+function alley_typed_action_callback( string $hook ): void {}
+add_action( 'plugins_loaded', 'alley_typed_action_callback' );

@@ -1,18 +1,18 @@
 <?php
 /**
- * Closure/arrow callback typehint fail fixture.
+ * Filter callback typehint fail fixture.
  *
  * @package Alley\WP\Coding_Standards
  */
 
 // Inline closure — parameter typehint.
-add_action( 'init', function ( string $arg ) {
-	// Body.
+add_filter( 'the_title', function ( string $arg ) {
+	return $arg;
 } );
 
 // Static closure — parameter typehint.
-add_action( 'wp_loaded', static function ( string $arg ) {
-	// Body.
+add_filter( 'the_excerpt', static function ( string $arg ) {
+	return $arg;
 } );
 
 // Arrow function — parameter typehint.

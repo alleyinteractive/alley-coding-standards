@@ -1,6 +1,6 @@
 <?php
 /**
- * Class method callback typehint expectations file.
+ * Named filter callback typehint expectations file.
  *
  * @package Alley\WP\Coding_Standards
  */

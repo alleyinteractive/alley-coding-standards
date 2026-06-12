@@ -6,5 +6,5 @@
  */
 
 return [
-	'Alley.PHP.ActionFilterCallbackTypehint.ParameterTypehint',
+	'Alley.PHP.FilterCallbackTypehint.ParameterTypehint',
 ];

@@ -1,6 +1,6 @@
 <?php
 /**
- * Named callback typehint fix fixture.
+ * Named filter callback typehint fix fixture.
  *
  * Each violation here is auto-fixable; after phpcbf all typehints must be gone.
  *
@@ -8,5 +8,7 @@
  */
 
 // Named function with parameter typehint and return type, registered as a string callback.
-function alley_typed_named_fix_callback( string $arg ): void {}
-add_action( 'init', 'alley_typed_named_fix_callback' );
+function alley_typed_named_fix_callback( string $arg ): string {
+	return $arg;
+}
+add_filter( 'the_title', 'alley_typed_named_fix_callback' );

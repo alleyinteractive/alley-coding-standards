@@ -1,6 +1,6 @@
 <?php
 /**
- * Closure/arrow callback typehint fix fixture.
+ * Filter callback typehint fix fixture.
  *
  * Each violation here is auto-fixable; after phpcbf all typehints must be gone.
  *
@@ -8,14 +8,14 @@
  */
 
 // Inline closure — parameter typehint.
-add_action( 'init', function ( $arg ) {
-	// Body.
+add_filter( 'the_title', function ( string $arg ) {
+	return $arg;
 } );
 
 // Static closure — parameter typehint.
-add_action( 'wp_loaded', static function ( $arg ) {
-	// Body.
+add_filter( 'the_excerpt', static function ( string $arg ) {
+	return $arg;
 } );
 
 // Arrow function — parameter typehint.
-add_filter( 'the_title', fn( $title ): string => strtoupper( $title ) );
+add_filter( 'the_title', fn( string $title ): string => strtoupper( $title ) );
