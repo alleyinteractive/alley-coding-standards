@@ -1,6 +1,6 @@
 # Alley Coding Standards
 
-[![Example of a badge pointing to the readme standard spec](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
+[![A badge pointing to the readme standard spec](https://img.shields.io/badge/readme%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/RichardLitt/standard-readme)
 
 This is a PHPCS ruleset for [Alley Interactive](https://alley.com).
 
@@ -17,8 +17,10 @@ This will install the latest compatible version of PHPCS, WPCS, and VIPCS to you
 You can also manually add this to your project's `composer.json` file as part of the `require` property:
 
 ```json
-"require": {
-	"alleyinteractive/alley-coding-standards": "^2.0"
+{
+	"require": {
+		"alleyinteractive/alley-coding-standards": "^2.0"
+	}
 }
 ```
 
@@ -33,8 +35,10 @@ vendor/bin/phpcs --standard=Alley-Interactive .
 Alternatively, you can set this as a composer script, which will automatically reference the correct version of `phpcs` and the dependent standards.
 
 ```json
-"scripts": {
-	"phpcs" : "phpcs --standard=Alley-Interactive ."
+{
+	"scripts": {
+		"phpcs": "phpcs --standard=Alley-Interactive ."
+	}
 }
 ```
 
@@ -53,7 +57,7 @@ composer run phpcs -- --report=summary
 ### Extending the Ruleset
 
 You can create a custom ruleset for your project that extends or customizes
-these rules by creating your own `phpcs.xml` file in your project, which
+these rules by creating your own `.phpcs.xml` file in your project, which
 references these rules, like this:
 
 ```xml
