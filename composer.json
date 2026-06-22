@@ -12,7 +12,7 @@
   },
   "require-dev": {
     "phpunit/phpunit": "^12",
-    "symfony/finder": "^7.4"
+    "symfony/finder": "^8.1"
   },
   "autoload-dev": {
     "psr-4": {
