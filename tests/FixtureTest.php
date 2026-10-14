@@ -43,10 +43,12 @@ class FixtureTest extends TestCase {
 			$expectations = include $expectation;
 		}
 
+		// Expectations are a list of error sources, or error sources mapped to the lines they must be found on.
 		$this->process_phpcs_output(
 			$this->run_phpcs( $file ),
-			ignored_errors: $expectations,
-			expect_to_fail: true
+			ignored_errors: array_filter( $expectations, 'is_int', ARRAY_FILTER_USE_KEY ),
+			expect_to_fail: true,
+			expected_lines: array_filter( $expectations, 'is_string', ARRAY_FILTER_USE_KEY ),
 		);
 	}
 

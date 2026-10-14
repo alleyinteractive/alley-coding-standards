@@ -68,15 +68,18 @@ trait PhpcsHelper {
 	 * @param array<mixed>  $output The PHPCS output.
 	 * @param array<string> $ignored_errors The errors to ignore. If an error is found in this list, it will be ignored and not fail the test if it is not found.
 	 * @param array<string> $expected_errors The errors that are expected to be found. If an error is not found that is in this list, the test will fail.
+	 * @param bool          $expect_to_fail Whether the file is expected to produce errors.
+	 * @param array<string, array<int>> $expected_lines Errors mapped to the exact lines they must be found on. The test fails if an error is missing from a listed line or found on an unlisted one.
 	 */
 	protected function process_phpcs_output(
 		array $output,
 		array $ignored_errors = [],
 		array $expected_errors = [],
 		bool $expect_to_fail = false,
+		array $expected_lines = [],
 	): void {
-		// Add expected errors to the list of ignored errors.
-		$ignored_errors = array_unique( array_merge( $ignored_errors, $expected_errors ) );
+		// Add expected errors to the list of ignored errors. Errors with expected lines are checked below.
+		$ignored_errors = array_unique( array_merge( $ignored_errors, $expected_errors, array_keys( $expected_lines ) ) );
 
 		$expected_errors_not_found = $expected_errors;
 
@@ -94,6 +97,24 @@ trait PhpcsHelper {
 				$expected_errors_not_found,
 				fn ( $error ) => ! in_array( $error, $errors, true ),
 			);
+
+			foreach ( $expected_lines as $source => $lines ) {
+				$found_lines = array_unique(
+					array_column(
+						array_filter( $data['messages'], fn ( $message ) => $source === $message['source'] ),
+						'line',
+					),
+				);
+
+				sort( $found_lines );
+				sort( $lines );
+
+				$this->assertSame(
+					$lines,
+					$found_lines,
+					sprintf( 'Lines with %s in %s do not match the expectations.', $source, substr( $file, strlen( __DIR__ ) ) ),
+				);
+			}
 
 			if ( ! empty( $unexpected_messages ) ) {
 				$this->fail(

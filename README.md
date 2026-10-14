@@ -91,6 +91,16 @@ A corresponding file should be created in `tests/fixtures/fail/expectations`
 referencing the expected source of the failures for that test file. Name the file
 the same as you do the fixture (e.g. `tests/fixtures/fail/foo.php` and `tests/fixtures/fail/expectations/foo.php`).
 
+To check that each case in a fixture is caught, map the source to the lines it
+should be reported on. The test fails if the error is missing from a listed line
+or reported on an unlisted one:
+
+```php
+return [
+	'Alley.PHP.BlockWrapperAttributes.UnverifiableAttributes' => [ 11, 14, 22 ],
+];
+```
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.

@@ -52,7 +52,7 @@ Custom sniff sources are referenced in PHPCS output as `Alley.PHP.<SniffName>.<E
 
 - **`tests/fixtures/pass/*.php`** — files that must produce zero PHPCS errors
 - **`tests/fixtures/fail/*.php`** — files that must produce at least one PHPCS error
-- **`tests/fixtures/fail/expectations/*.php`** — return arrays of expected PHPCS error source strings (e.g. `'Alley.PHP.StrictTypeDeclarationSpacing.SpaceAfterEquals'`); the test fails if an unexpected error appears OR if an expected error is absent
+- **`tests/fixtures/fail/expectations/*.php`** — return an array of allowed PHPCS error source strings (e.g. `'Alley.PHP.StrictTypeDeclarationSpacing.SpaceAfterEquals'`); the test fails if an unexpected error appears. A source can instead be mapped to the exact lines it must appear on (e.g. `'Alley.PHP.BlockWrapperAttributes.UnverifiableAttributes' => [ 11, 14 ]`); the test then also fails if it's missing from a listed line or found on an unlisted one. Use line numbers when one fixture covers several cases, so each case is checked individually.
 
 Expectations files are matched by filename to their corresponding fail fixture. An expectations file is optional — without one, the test only asserts that _some_ error occurs.
 
@@ -63,4 +63,4 @@ Expectations files are matched by filename to their corresponding fail fixture. 
 1. For ruleset-only changes: edit `Alley-Interactive/ruleset.xml`
 2. For a new custom sniff: add a class to `Alley-Interactive/Sniffs/PHP/` extending `WordPressCS\WordPress\Sniff`
 3. Add a fixture to `tests/fixtures/pass/` and/or `tests/fixtures/fail/`
-4. If adding a fail fixture, add a corresponding `tests/fixtures/fail/expectations/` file returning an array of expected error source strings
+4. If adding a fail fixture, add a corresponding `tests/fixtures/fail/expectations/` file returning an array of expected error source strings, optionally mapped to line numbers
