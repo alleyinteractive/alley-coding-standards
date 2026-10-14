@@ -6,5 +6,5 @@
  */
 
 return [
-	'Alley.PHP.BlockWrapperAttributes.DynamicAttributeName',
+	'Alley.PHP.BlockWrapperAttributes.DynamicAttributeName' => [ 11, 12, 13, 14, 19, 23, 28, 33, 34, 40 ],
 ];

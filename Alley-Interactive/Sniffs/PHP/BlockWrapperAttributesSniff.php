@@ -38,12 +38,53 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	];
 
 	/**
+	 * Variable use kinds returned by check_variable_use().
+	 */
+	private const USE_READ        = 0;
+	private const USE_ASSIGN      = 1;
+	private const USE_MODIFY      = 2;
+	private const USE_UNTRACEABLE = 3;
+
+	/**
+	 * Functions that only read an array passed to them, so passing the traced variable isn't a write.
+	 *
+	 * @var array<string, bool>
+	 */
+	private const READ_ONLY_FUNCTIONS = [
+		'array_key_exists'             => true,
+		'array_keys'                   => true,
+		'array_merge'                  => true,
+		'array_values'                 => true,
+		'count'                        => true,
+		'get_block_wrapper_attributes' => true,
+		'implode'                      => true,
+		'in_array'                     => true,
+		'is_array'                     => true,
+		'wp_json_encode'               => true,
+	];
+
+	/**
+	 * The file and fixer pass that $reported and $traced belong to.
+	 *
+	 * @var string
+	 */
+	private string $file_key = '';
+
+	/**
 	 * Key positions already reported, so a variable passed to several calls
 	 * doesn't report the same key twice.
 	 *
-	 * @var array<string, array<int, bool>>
+	 * @var array<int, bool>
 	 */
 	private array $reported = [];
+
+	/**
+	 * Trace results by variable position, so repeated self-merges aren't
+	 * re-traced exponentially.
+	 *
+	 * @var array<int, string|null>
+	 */
+	private array $traced = [];
 
 	/**
 	 * Checks the `$extra_attributes` argument.
@@ -54,6 +95,15 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	 * @param array  $parameters      Information about the parameters.
 	 */
 	public function process_parameters( $stackPtr, $group_name, $matched_content, $parameters ) {
+		// Token positions change between files and phpcbf passes.
+		$file_key = $this->phpcsFile->getFilename() . ':' . ( $this->phpcsFile->fixer->enabled ? $this->phpcsFile->fixer->loops : 0 );
+
+		if ( $file_key !== $this->file_key ) {
+			$this->file_key = $file_key;
+			$this->reported = [];
+			$this->traced   = [];
+		}
+
 		$param = PassedParameters::getParameterFromStack( $parameters, 1, 'extra_attributes' );
 
 		if ( false === $param ) {
@@ -166,11 +216,11 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	 * @param int $end   Last non-empty token of the key.
 	 */
 	private function check_key( int $start, int $end ): void {
-		if ( $this->is_safe_key( $start, $end ) || isset( $this->reported[ $this->phpcsFile->getFilename() ][ $start ] ) ) {
+		if ( $this->is_safe_key( $start, $end ) || isset( $this->reported[ $start ] ) ) {
 			return;
 		}
 
-		$this->reported[ $this->phpcsFile->getFilename() ][ $start ] = true;
+		$this->reported[ $start ] = true;
 
 		$this->phpcsFile->addError(
 			'Attribute names passed to get_block_wrapper_attributes() are not escaped. Use a string literal or wrap the name in sanitize_key(). Found: %s',
@@ -213,6 +263,20 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	 * @return string|null Why the variable can't be verified, or null if it can.
 	 */
 	private function check_variable( int $var_ptr ): ?string {
+		if ( ! array_key_exists( $var_ptr, $this->traced ) ) {
+			$this->traced[ $var_ptr ] = $this->trace_variable( $var_ptr );
+		}
+
+		return $this->traced[ $var_ptr ];
+	}
+
+	/**
+	 * Traces a variable through its writes earlier in the same scope, uncached.
+	 *
+	 * @param int $var_ptr The variable token.
+	 * @return string|null Why the variable can't be verified, or null if it can.
+	 */
+	private function trace_variable( int $var_ptr ): ?string {
 		$name     = $this->tokens[ $var_ptr ]['content'];
 		$function = Conditions::getLastCondition( $this->phpcsFile, $var_ptr, [ T_FUNCTION, T_CLOSURE ] );
 		$start    = 0;
@@ -220,85 +284,158 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 		if ( false !== $function ) {
 			$start = $this->tokens[ $function ]['scope_opener'] + 1;
 
-			// Parameters and closure `use` variables come from outside this scope.
-			for ( $i = $this->tokens[ $function ]['parenthesis_opener']; $i < $start; $i++ ) {
-				if ( T_VARIABLE === $this->tokens[ $i ]['code'] && $name === $this->tokens[ $i ]['content'] ) {
-					return sprintf( '%s is passed in from outside this function', $name );
-				}
+			if ( $this->is_parameter( $function, $name ) ) {
+				return sprintf( '%s is passed in from outside this function', $name );
 			}
 		}
 
 		$assigned = false;
 
 		for ( $i = $start; $i < $var_ptr; $i++ ) {
-			// Variables in nested functions and classes belong to another scope.
-			if ( isset( $this->tokens[ $i ]['scope_closer'] ) && $this->tokens[ $i ]['scope_closer'] < $var_ptr && in_array( $this->tokens[ $i ]['code'], [ T_FUNCTION, T_CLOSURE, T_FN, T_CLASS, T_ANON_CLASS, T_TRAIT, T_INTERFACE, T_ENUM ], true ) ) {
-				$i = $this->tokens[ $i ]['scope_closer'];
-				continue;
+			if ( isset( $this->tokens[ $i ]['scope_closer'] ) && in_array( $this->tokens[ $i ]['code'], [ T_FUNCTION, T_CLOSURE, T_FN, T_CLASS, T_ANON_CLASS, T_TRAIT, T_INTERFACE, T_ENUM ], true ) ) {
+				// A closure that captures it by reference can change it whenever the closure is called.
+				if ( T_CLOSURE === $this->tokens[ $i ]['code'] && $this->captures_by_reference( $i, $name ) ) {
+					return sprintf( '%s is captured by reference on line %d', $name, $this->tokens[ $i ]['line'] );
+				}
+
+				// Variables in nested functions and classes belong to another scope.
+				if ( $this->tokens[ $i ]['scope_closer'] < $var_ptr ) {
+					$i = $this->tokens[ $i ]['scope_closer'];
+					continue;
+				}
+
+				// Arrow functions aren't conditions, so a parameter can shadow the captured outer variable.
+				if ( T_FN === $this->tokens[ $i ]['code'] && $this->is_parameter( $i, $name ) ) {
+					return sprintf( '%s is passed in from outside this function', $name );
+				}
+			}
+
+			if ( $this->can_write_any_variable( $i ) ) {
+				return sprintf( '%s can be overwritten by the code on line %d', $name, $this->tokens[ $i ]['line'] );
 			}
 
 			if ( T_VARIABLE !== $this->tokens[ $i ]['code'] || $name !== $this->tokens[ $i ]['content'] ) {
 				continue;
 			}
 
-			$write = $this->check_variable_use( $i, $var_ptr );
+			$use = $this->check_variable_use( $i, $var_ptr );
 
-			if ( false === $write ) {
+			if ( self::USE_UNTRACEABLE === $use ) {
 				return sprintf( '%s is set on line %d in a way that can\'t be traced', $name, $this->tokens[ $i ]['line'] );
 			}
 
-			$assigned = $assigned || $write;
+			if ( self::USE_ASSIGN !== $use ) {
+				// Element writes and compound assignments keep existing keys, so they don't count.
+				continue;
+			}
+
+			// An assignment inside a block the call isn't in, like an `if`, may not run.
+			if ( [] === array_diff_key( $this->tokens[ $i ]['conditions'], $this->tokens[ $var_ptr ]['conditions'] ) ) {
+				$assigned = true;
+			} elseif ( ! $assigned ) {
+				$branch_line = $this->tokens[ $i ]['line'];
+			}
 		}
 
-		return $assigned ? null : sprintf( '%s is not assigned in this scope', $name );
+		if ( $assigned ) {
+			return null;
+		}
+
+		return isset( $branch_line )
+			? sprintf( '%s is only assigned on line %d inside a block that may not run', $name, $branch_line )
+			: sprintf( '%s is not assigned in this scope', $name );
 	}
+
+	/**
+	 * Whether a function's parameters or closure `use` list include a variable.
+	 *
+	 * @param int    $function The function, closure, or arrow function token.
+	 * @param string $name     The variable name.
+	 * @return bool
+	 */
+	private function is_parameter( int $function, string $name ): bool {
+		for ( $i = $this->tokens[ $function ]['parenthesis_opener']; $i < $this->tokens[ $function ]['scope_opener']; $i++ ) {
+			if ( T_VARIABLE === $this->tokens[ $i ]['code'] && $name === $this->tokens[ $i ]['content'] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether a closure's `use` list captures a variable by reference.
+	 *
+	 * @param int    $closure The closure token.
+	 * @param string $name    The variable name.
+	 * @return bool
+	 */
+	private function captures_by_reference( int $closure, string $name ): bool {
+		for ( $i = $this->tokens[ $closure ]['parenthesis_closer']; $i < $this->tokens[ $closure ]['scope_opener']; $i++ ) {
+			if ( T_VARIABLE === $this->tokens[ $i ]['code'] && $name === $this->tokens[ $i ]['content'] ) {
+				return T_BITWISE_AND === $this->tokens[ $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $i - 1, null, true ) ]['code'];
+			}
+		}
+
+		return false;
+	}
+
 
 	/**
 	 * Checks one use of the traced variable.
 	 *
+	 * Only known-safe forms are allowed: assigning a traceable value, writing an element with a checked key,
+	 * and reading. Any other use could replace the array, so it can't be traced.
+	 *
 	 * @param int $ptr   A T_VARIABLE token matching the traced variable.
 	 * @param int $limit The use being traced; statements containing it are skipped.
-	 * @return bool|null True for a checked write, null for a read, false for a write that can't be traced.
+	 * @return int One of the USE_* constants.
 	 */
-	private function check_variable_use( int $ptr, int $limit ) {
+	private function check_variable_use( int $ptr, int $limit ): int {
 		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $ptr - 1, null, true );
 		$next = $this->phpcsFile->findNext( Tokens::$emptyTokens, $ptr + 1, null, true );
 
-		// References, globals, statics, and foreach targets can change it from elsewhere.
-		if ( in_array( $this->tokens[ $prev ]['code'], [ T_BITWISE_AND, T_GLOBAL, T_STATIC ], true ) || $this->is_foreach_target( $ptr ) ) {
-			return false;
-		}
-
-		// `$attrs = ...` or `$attrs += ...`.
-		if ( isset( Tokens::$assignmentTokens[ $this->tokens[ $next ]['code'] ] ) ) {
+		// `$attrs = ...`, `$attrs += ...`, or `$attrs ??= ...`.
+		if ( in_array( $this->tokens[ $next ]['code'], [ T_EQUAL, T_PLUS_EQUAL, T_COALESCE_EQUAL ], true ) && ! in_array( $this->tokens[ $prev ]['code'], [ T_BITWISE_AND, T_DOLLAR, T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON ], true ) ) {
 			$end = $this->phpcsFile->findEndOfStatement( $next + 1 );
 
 			// `$attrs = array_merge( $attrs, ... )` while tracing that inner `$attrs`.
 			if ( $end >= $limit ) {
-				return null;
+				return self::USE_READ;
 			}
 
 			$first = $this->phpcsFile->findNext( Tokens::$emptyTokens, $next + 1, $end + 1, true );
 			$last  = $this->phpcsFile->findPrevious( Tokens::$emptyTokens + [ T_SEMICOLON => T_SEMICOLON ], $end, $next, true );
 
-			return false !== $first && null === $this->check_value( $first, $last );
+			if ( false === $first || null !== $this->check_value( $first, $last ) ) {
+				return self::USE_UNTRACEABLE;
+			}
+
+			// `+=` and `??=` keep the existing keys.
+			return T_EQUAL === $this->tokens[ $next ]['code'] ? self::USE_ASSIGN : self::USE_MODIFY;
 		}
 
 		if ( T_OPEN_SQUARE_BRACKET !== $this->tokens[ $next ]['code'] ) {
-			return null;
+			return $this->is_read( $ptr, $ptr ) ? self::USE_READ : self::USE_UNTRACEABLE;
 		}
 
-		// `$attrs[ key ]...`: a write only if the bracket chain ends in an assignment.
+		// `$attrs[ key ]...`: only that key can change, so a read or a write with a safe key is fine.
 		$key_open  = $next;
 		$key_close = $this->tokens[ $key_open ]['bracket_closer'];
-		$after     = $this->phpcsFile->findNext( Tokens::$emptyTokens, $key_close + 1, null, true );
+		$end       = $key_close;
+		$after     = $this->phpcsFile->findNext( Tokens::$emptyTokens, $end + 1, null, true );
 
 		while ( T_OPEN_SQUARE_BRACKET === $this->tokens[ $after ]['code'] ) {
-			$after = $this->phpcsFile->findNext( Tokens::$emptyTokens, $this->tokens[ $after ]['bracket_closer'] + 1, null, true );
+			$end   = $this->tokens[ $after ]['bracket_closer'];
+			$after = $this->phpcsFile->findNext( Tokens::$emptyTokens, $end + 1, null, true );
 		}
 
-		if ( ! isset( Tokens::$assignmentTokens[ $this->tokens[ $after ]['code'] ] ) ) {
-			return null;
+		$is_write = in_array( $this->tokens[ $prev ]['code'], [ T_INC, T_DEC ], true )
+			|| in_array( $this->tokens[ $after ]['code'], [ T_INC, T_DEC ], true )
+			|| ( T_DOUBLE_ARROW !== $this->tokens[ $after ]['code'] && isset( Tokens::$assignmentTokens[ $this->tokens[ $after ]['code'] ] ) );
+
+		if ( ! $is_write && $this->is_read( $ptr, $end ) ) {
+			return self::USE_READ;
 		}
 
 		$key_start = $this->phpcsFile->findNext( Tokens::$emptyTokens, $key_open + 1, $key_close, true );
@@ -308,29 +445,103 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			$this->check_key( $key_start, $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $key_close - 1, null, true ) );
 		}
 
-		return true;
+		return self::USE_MODIFY;
 	}
 
 	/**
-	 * Whether a variable is the key or value target of a foreach.
+	 * Whether a variable or element is only read where it appears.
 	 *
-	 * @param int $ptr The variable token.
+	 * Reads are an operand of an operator, a value being assigned, returned, or echoed, a condition, the subject of
+	 * a foreach, or an argument to isset(), empty(), unset(), or a read-only function. Anything else, like a
+	 * function argument, a list() or foreach target, a reference, or a global, could be a write.
+	 *
+	 * @param int $start The variable token.
+	 * @param int $end   The last token of the variable or element.
 	 * @return bool
 	 */
-	private function is_foreach_target( int $ptr ): bool {
-		if ( empty( $this->tokens[ $ptr ]['nested_parenthesis'] ) ) {
+	private function is_read( int $start, int $end ): bool {
+		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $start - 1, null, true );
+		$next = $this->phpcsFile->findNext( Tokens::$emptyTokens, $end + 1, null, true );
+
+		$operators = Tokens::$arithmeticTokens + Tokens::$comparisonTokens + Tokens::$booleanOperators + [
+			T_STRING_CONCAT => T_STRING_CONCAT,
+			T_INLINE_THEN   => T_INLINE_THEN,
+			T_INLINE_ELSE   => T_INLINE_ELSE,
+		];
+		$before    = $operators + Tokens::$assignmentTokens + [
+			T_BOOLEAN_NOT => T_BOOLEAN_NOT,
+			T_RETURN      => T_RETURN,
+			T_ECHO        => T_ECHO,
+			T_PRINT       => T_PRINT,
+			T_FN_ARROW    => T_FN_ARROW,
+		];
+		$after     = $operators + [
+			T_OBJECT_OPERATOR          => T_OBJECT_OPERATOR,
+			T_NULLSAFE_OBJECT_OPERATOR => T_NULLSAFE_OBJECT_OPERATOR,
+		];
+
+		// `[ 'key' => $attrs ]` may be a list() target.
+		unset( $before[ T_DOUBLE_ARROW ] );
+
+		if ( isset( $before[ $this->tokens[ $prev ]['code'] ] ) || isset( $after[ $this->tokens[ $next ]['code'] ] ) ) {
+			return true;
+		}
+
+		if (
+			! in_array( $this->tokens[ $prev ]['code'], [ T_OPEN_PARENTHESIS, T_COMMA ], true )
+			|| ! in_array( $this->tokens[ $next ]['code'], [ T_CLOSE_PARENTHESIS, T_COMMA, T_AS ], true )
+			|| empty( $this->tokens[ $start ]['nested_parenthesis'] )
+		) {
 			return false;
 		}
 
-		$open  = array_key_last( $this->tokens[ $ptr ]['nested_parenthesis'] );
-		$owner = $this->tokens[ $open ]['parenthesis_owner'] ?? null;
+		$open = array_key_last( $this->tokens[ $start ]['nested_parenthesis'] );
 
-		if ( null === $owner || T_FOREACH !== $this->tokens[ $owner ]['code'] ) {
+		// `if ( $attrs )` or `foreach ( $attrs as ... )`.
+		if ( isset( $this->tokens[ $open ]['parenthesis_owner'] ) ) {
+			$owner = $this->tokens[ $this->tokens[ $open ]['parenthesis_owner'] ]['code'];
+
+			return T_OPEN_PARENTHESIS === $this->tokens[ $prev ]['code'] && (
+				( T_FOREACH === $owner && T_AS === $this->tokens[ $next ]['code'] )
+				|| ( in_array( $owner, [ T_IF, T_ELSEIF, T_WHILE, T_SWITCH, T_MATCH ], true ) && T_CLOSE_PARENTHESIS === $this->tokens[ $next ]['code'] )
+			);
+		}
+
+		$callee = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $open - 1, null, true );
+
+		if ( in_array( $this->tokens[ $callee ]['code'], [ T_ISSET, T_EMPTY, T_UNSET ], true ) ) {
+			return true;
+		}
+
+		// Methods and constructors can't be looked up, so only plain function calls can be read-only.
+		$before_callee = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $callee - 1, null, true );
+
+		return T_STRING === $this->tokens[ $callee ]['code']
+			&& isset( self::READ_ONLY_FUNCTIONS[ strtolower( $this->tokens[ $callee ]['content'] ) ] )
+			&& ! in_array( $this->tokens[ $before_callee ]['code'], [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW, T_FUNCTION ], true );
+	}
+
+	/**
+	 * Whether a token is `extract()`, a variable variable, or an include, which can write any variable in scope.
+	 *
+	 * @param int $ptr The token.
+	 * @return bool
+	 */
+	private function can_write_any_variable( int $ptr ): bool {
+		$code = $this->tokens[ $ptr ]['code'];
+
+		if ( in_array( $code, [ T_DOLLAR, T_INCLUDE, T_INCLUDE_ONCE, T_REQUIRE, T_REQUIRE_ONCE ], true ) ) {
+			return true;
+		}
+
+		if ( T_STRING !== $code || 'extract' !== strtolower( $this->tokens[ $ptr ]['content'] ) ) {
 			return false;
 		}
 
-		$as = $this->phpcsFile->findNext( T_AS, $open + 1, $this->tokens[ $open ]['parenthesis_closer'] );
+		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $ptr - 1, null, true );
+		$next = $this->phpcsFile->findNext( Tokens::$emptyTokens, $ptr + 1, null, true );
 
-		return false !== $as && $ptr > $as;
+		return T_OPEN_PARENTHESIS === $this->tokens[ $next ]['code']
+			&& ! in_array( $this->tokens[ $prev ]['code'], [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION, T_NEW ], true );
 	}
 }

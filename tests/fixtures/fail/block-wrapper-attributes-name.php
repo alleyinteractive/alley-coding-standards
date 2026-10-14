@@ -26,3 +26,17 @@ echo get_block_wrapper_attributes( $alley_built );
 
 // Unsafe key inside a merged array.
 echo get_block_wrapper_attributes( array_merge( $alley_built, [ $alley_name => 'y' ] ) );
+
+// Increment and decrement create entries with dynamic keys.
+$alley_counts = [ 'class' => 'a' ];
+
+$alley_counts[ $alley_name ]++;
+--$alley_counts[ "data-{$alley_name}" ];
+
+echo get_block_wrapper_attributes( $alley_counts );
+
+// A reference to an element creates it with a dynamic key.
+$alley_referenced = [ 'class' => 'a' ];
+$alley_reference  = &$alley_referenced[ $alley_name ];
+
+echo get_block_wrapper_attributes( $alley_referenced );
