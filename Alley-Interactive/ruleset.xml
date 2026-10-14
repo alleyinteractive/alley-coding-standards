@@ -73,6 +73,18 @@
     <exclude-pattern>vendor/</exclude-pattern>
   </rule>
 
+  <!--
+  get_block_wrapper_attributes() escapes attribute values. Its keys are checked
+  by Alley.PHP.BlockWrapperAttributes instead.
+  -->
+  <rule ref="WordPress.Security.EscapeOutput">
+    <properties>
+      <property name="customAutoEscapedFunctions" type="array">
+        <element value="get_block_wrapper_attributes"/>
+      </property>
+    </properties>
+  </rule>
+
   <!-- Allow unescaped output in test files. -->
   <rule ref="WordPress.Security.EscapeOutput.OutputNotEscaped">
     <exclude-pattern>tests/*</exclude-pattern>

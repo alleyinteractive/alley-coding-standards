@@ -72,6 +72,88 @@ references these rules, like this:
 </ruleset>
 ```
 
+### `get_block_wrapper_attributes()` keys
+
+`get_block_wrapper_attributes()` escapes attribute values, but the array keys
+become attribute names and are output as-is. The `Alley.PHP.BlockWrapperAttributes`
+sniff requires every key to be a string or integer literal, a `sanitize_key()`
+call, or a concatenation of only those:
+
+```php
+$wrapper_attributes = [
+	'class'   => 'wp-block-example',
+	'data-id' => $attributes['id'], // Values are escaped for you.
+];
+
+$wrapper_attributes[ sanitize_key( $key ) ]           = $value;
+$wrapper_attributes[ 'data-' . sanitize_key( $key ) ] = $value;
+
+echo get_block_wrapper_attributes( $wrapper_attributes );
+```
+
+Note that `sanitize_key()` lowercases the key and strips everything except
+`a-z`, `0-9`, `_` and `-`.
+
+The sniff follows the array through inline literals, `array_merge()`,
+`array_replace()`, ternaries, `??`, spreads, and writes to variables in the same
+function (or file, outside of functions) before the call. If the call is inside
+a loop, writes later in the loop body count too, since they run before the next
+iteration. Anything it can't verify is an error:
+
+- `UnescapedDynamicKey`: a visible key that isn't provably safe, such as `$key`,
+  `"data-{$key}"`, `esc_attr( $key )` or a constant. Wrap it in `sanitize_key()`.
+- `UnverifiableKeys`: the keys can't be seen. Common causes:
+  - a function parameter, including the block's `$attributes`
+  - a closure `use` variable, or a variable captured by reference (`use ( &$attrs )`)
+  - a helper's return value or an object property
+  - `$a + $b` unions, `array_map()`/`array_filter()` results, chained
+    assignments (`$a = $b = [ ... ]`) and destructuring
+  - a variable passed to a function that might modify it before the call
+  - `extract()`, `include`/`require`, `eval()`, a variable variable (`$$name`)
+    or a write to `$GLOBALS` anywhere in the same scope before the call, since
+    these can change the array without naming it
+
+#### Passing the array to other functions
+
+A function that takes the array by reference could add keys, so the sniff needs
+to know the function is read-only:
+
+- **Built-in PHP functions** are checked automatically. `count( $attrs )`,
+  `in_array( 'x', $attrs )` and `implode( ' ', $attrs )` are fine;
+  `sort( $attrs )` and `preg_match( $pattern, $subject, $attrs )` are not.
+- **WordPress and project functions, methods and closures** aren't loaded when
+  PHPCS runs, so they always make the array unverifiable. The exceptions are
+  `array_merge()`, `array_replace()`, `sanitize_key()` and
+  `get_block_wrapper_attributes()` itself.
+
+#### Where the error is reported
+
+The error isn't always on the `get_block_wrapper_attributes()` line, and a
+`phpcs:ignore` only works on the line the error is reported on. Every message
+names the line of the `get_block_wrapper_attributes()` call it relates to.
+
+| Cause | Reported on |
+| --- | --- |
+| Inline key, e.g. `[ $key => 1 ]` | the key |
+| Element write, e.g. `$attrs[ $key ] = 1;` | the key in that write |
+| Variable passed to a function, captured by reference, or changed with another operator | that use of the variable |
+| `extract()`, `include`/`require`, `eval()`, `$$name` or a `$GLOBALS` write | that construct |
+| Untraceable assignment, e.g. `$attrs = alley_get_attrs();` | the assigned value |
+| Parameter, unassigned variable, or a helper result or property passed directly | the argument to `get_block_wrapper_attributes()` |
+
+If you've confirmed the keys are safe, ignore the specific code on that line,
+with a reason:
+
+```php
+// phpcs:ignore Alley.PHP.BlockWrapperAttributes.UnverifiableKeys -- Keys are hardcoded in alley_get_wrapper_attrs().
+echo get_block_wrapper_attributes( alley_get_wrapper_attrs() );
+
+$attrs = [ 'class' => 'example' ];
+// phpcs:ignore Alley.PHP.BlockWrapperAttributes.UnverifiableKeys -- alley_add_classes() only changes the class value.
+alley_add_classes( $attrs );
+echo get_block_wrapper_attributes( $attrs );
+```
+
 ## Testing
 
 When contributing to this project, modifications to the ruleset should have a

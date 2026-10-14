@@ -2,6 +2,33 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+## 2.5.0
+
+**🚨 New errors:** The new `Alley.PHP.BlockWrapperAttributes` sniff reports an
+error whenever it cannot prove that the keys passed to
+`get_block_wrapper_attributes()` are safe. Existing block templates are likely
+to need updates. See the [README](README.md#get_block_wrapper_attributes-keys)
+for safe patterns.
+
+### Added
+
+- `Alley.PHP.BlockWrapperAttributes.UnescapedDynamicKey`: errors when a key
+  passed to `get_block_wrapper_attributes()` is not a string or integer literal,
+  a `sanitize_key()` call, or a concatenation of only those. Keys become HTML
+  attribute names and are not escaped by WordPress.
+- `Alley.PHP.BlockWrapperAttributes.UnverifiableKeys`: errors when the keys
+  can't be determined, such as when the array is a function parameter, a
+  helper's return value, a property, a variable passed to another function
+  that could modify it by reference, or a variable in a scope that uses
+  `extract()`, `include`/`require`, `eval()`, `$$name` or writes to `$GLOBALS`.
+
+### Changed
+
+- `get_block_wrapper_attributes()` is now treated as an auto-escaped function by
+  `WordPress.Security.EscapeOutput`, so
+  `echo get_block_wrapper_attributes( ... )` no longer needs a `wp_kses_data()`
+  wrapper or an ignore comment.
+
 ## 2.4.1
 
 ### Changed
