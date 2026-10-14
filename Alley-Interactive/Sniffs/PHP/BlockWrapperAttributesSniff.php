@@ -43,11 +43,12 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * to a function that might modify it before the call. It is also unverifiable
  * when the scope contains extract(), include/require, eval(), a variable
  * variable (`$$name`) or a write to $GLOBALS before the call, since those can
- * change it without naming it. A function, including a namespaced call such as
- * `Project\array_merge()`, is only allowed if listed in READ_ONLY_FUNCTIONS,
- * since its definition isn't loaded. Passing an element, such as
- * `foo( $attrs[ $key ] )`, is checked like a write to that key, since a
- * by-reference parameter creates it.
+ * change it without naming it. Built-in PHP functions are checked with
+ * reflection, so `count()` is allowed but `sort()` is not. Other functions,
+ * including namespaced calls such as `Project\count()`, are only allowed if
+ * listed in READ_ONLY_FUNCTIONS, since their definitions aren't loaded. Passing
+ * an element, such as `foo( $attrs[ $key ] )`, is checked like a write to that
+ * key, since a by-reference parameter creates it.
  *
  * At file scope, a variable may already be set by the code that includes the
  * file (block render templates receive `$attributes`, `$content` and `$block`),
@@ -68,8 +69,8 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * Known limitations:
  *  - Arrow functions capture the enclosing scope by value, so apart from their
  *    parameters, a call inside one is traced through the enclosing function.
- *  - An unqualified call such as `array_merge( $attrs )` is assumed to be the
- *    global function, even in a namespace that defines its own.
+ *  - An unqualified call such as `count( $attrs )` is assumed to be the global
+ *    function, even in a namespace that defines its own `count()`.
  *  - Some safe shapes are reported as UnverifiableKeys rather than followed:
  *    binary `+` unions (`$a + $b`), chained assignments (`$a = $b = [...]`),
  *    closure `use` variables, and array_map()/array_filter() results.
@@ -107,7 +108,7 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	];
 
 	/**
-	 * Functions a traced variable can be passed to without it becoming unverifiable.
+	 * Non-PHP functions a traced variable can be passed to without it becoming unverifiable.
 	 *
 	 * @var array<string>
 	 */
@@ -768,7 +769,7 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 				? $closer
 				: $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $after - 1, null, true );
 			$callee      = $this->get_callee_if_direct_argument( $ptr, $last_closer );
-			if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'] ) ) {
+			if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'], $callee['param'] ) ) {
 				$key = $this->trim_range( $next + 1, $closer - 1 );
 
 				return [
@@ -782,7 +783,7 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 		}
 
 		$callee = $this->get_callee_if_direct_argument( $ptr, $ptr );
-		if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'] ) ) {
+		if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'], $callee['param'] ) ) {
 			return $this->opaque(
 				sprintf( '%s is passed to %s, which could modify it by reference', $name, $callee['label'] )
 			);
@@ -889,14 +890,48 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	/**
 	 * Whether passing a variable to a function argument cannot modify it.
 	 *
-	 * Only functions listed in READ_ONLY_FUNCTIONS are allowed, since the
-	 * definitions of other functions are not available.
+	 * Built-in PHP functions are checked with reflection, so `count( $attrs )` is
+	 * allowed but `sort( $attrs )` is not. Other functions are only allowed if
+	 * listed in READ_ONLY_FUNCTIONS, since their definitions are not available.
 	 *
-	 * @param string $name Lowercase function name, or an empty string for methods and dynamic calls.
+	 * @param string     $name  Lowercase function name, or an empty string for methods and dynamic calls.
+	 * @param int|string $param Parameter position (1-based) or name.
 	 * @return bool
 	 */
-	private function is_read_only_argument( string $name ): bool {
-		return in_array( $name, self::READ_ONLY_FUNCTIONS, true );
+	private function is_read_only_argument( string $name, $param ): bool {
+		if ( '' === $name ) {
+			return false;
+		}
+
+		if ( in_array( $name, self::READ_ONLY_FUNCTIONS, true ) ) {
+			return true;
+		}
+
+		if ( ! function_exists( $name ) ) {
+			return false;
+		}
+
+		$function = new \ReflectionFunction( $name );
+		if ( ! $function->isInternal() ) {
+			return false;
+		}
+
+		$parameters = $function->getParameters();
+		$target     = null;
+
+		foreach ( $parameters as $parameter ) {
+			if ( is_int( $param ) ? $parameter->getPosition() === $param - 1 : $parameter->getName() === $param ) {
+				$target = $parameter;
+				break;
+			}
+		}
+
+		// Extra positional arguments are collected by a trailing variadic parameter.
+		if ( null === $target && is_int( $param ) && ! empty( $parameters ) && end( $parameters )->isVariadic() ) {
+			$target = end( $parameters );
+		}
+
+		return null !== $target && ! $target->isPassedByReference();
 	}
 
 	/**

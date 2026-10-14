@@ -124,12 +124,17 @@ iteration. Anything it can't verify is an error:
 
 #### Passing the array to other functions
 
-A function that takes the array by reference could add keys, so the sniff only
-allows functions it knows are read-only: `array_merge()`, `array_replace()`,
-`sanitize_key()` and `get_block_wrapper_attributes()` itself. Any other
-function, method or closure makes the array unverifiable, including a
-namespaced function with one of those names, such as `Project\array_merge()`.
-PHP's own functions do too, even read-only ones like `count()`.
+A function that takes the array by reference could add keys, so the sniff needs
+to know the function is read-only:
+
+- **Built-in PHP functions** are checked automatically. `count( $attrs )`,
+  `in_array( 'x', $attrs )` and `implode( ' ', $attrs )` are fine;
+  `sort( $attrs )` and `preg_match( $pattern, $subject, $attrs )` are not.
+- **WordPress and project functions, methods and closures** aren't loaded when
+  PHPCS runs, so they always make the array unverifiable. That includes
+  namespaced functions that share a built-in's name, such as `Project\count()`.
+  The exceptions are `array_merge()`, `array_replace()`, `sanitize_key()` and
+  `get_block_wrapper_attributes()` itself.
 
 Wrapping the argument in parentheses, as in `alley_modify( ( $attrs ) )`, still
 passes it by reference. Passing one element, as in `alley_modify( $attrs[ $key ] )`,
