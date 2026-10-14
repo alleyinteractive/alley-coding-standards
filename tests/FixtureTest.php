@@ -45,7 +45,7 @@ class FixtureTest extends TestCase {
 
 		$this->process_phpcs_output(
 			$this->run_phpcs( $file ),
-			ignored_errors: $expectations,
+			expected_errors: $expectations,
 			expect_to_fail: true
 		);
 	}
