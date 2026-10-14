@@ -72,6 +72,50 @@ references these rules, like this:
 </ruleset>
 ```
 
+### `get_block_wrapper_attributes()` keys
+
+`get_block_wrapper_attributes()` escapes attribute values, but the array keys
+become attribute names and are output as-is. The `Alley.PHP.BlockWrapperAttributes`
+sniff requires every key to be a string or integer literal, or a concatenation
+of literals and `sanitize_key()` calls that starts with a literal containing a
+hyphen:
+
+```php
+echo get_block_wrapper_attributes(
+	[
+		'class'                        => 'wp-block-example',
+		'data-id'                      => $attributes['id'], // Values are escaped for you.
+		'data-' . sanitize_key( $key ) => $value,
+	]
+);
+```
+
+`sanitize_key()` lowercases the key and strips everything except `a-z`, `0-9`,
+`_` and `-`. That stops a key from breaking out of the attribute name, but on its
+own it still allows names like `onclick` or `style`, and `esc_attr()` doesn't
+make a value safe there: `[ sanitize_key( $key ) => $value ]` with `onmouseover`
+and `alert(1)` renders a working event handler. No event handler contains a
+hyphen, so a literal prefix like `'data-'` or `'aria-'` rules them out.
+
+The sniff checks inline array literals, `array_merge()`, `array_replace()`,
+ternaries, `??` and spreads. Anything it can't verify is an error:
+
+- `UnescapedDynamicKey`: a visible key that isn't provably safe, such as `$key`,
+  `"data-{$key}"`, `esc_attr( $key )`, a constant, or a bare `sanitize_key( $key )`.
+  Use `'data-' . sanitize_key( $key )`. Reported on the key.
+- `UnverifiableKeys`: the keys can't be seen, such as a variable, a function
+  parameter (including the block's `$attributes`), a helper's return value or an
+  object property. Reported on that expression.
+
+Every message names the line of the `get_block_wrapper_attributes()` call it
+relates to. If you've confirmed the keys are safe, ignore the specific code on
+that line, with a reason:
+
+```php
+// phpcs:ignore Alley.PHP.BlockWrapperAttributes.UnverifiableKeys -- Keys are hardcoded in alley_get_wrapper_attrs().
+echo get_block_wrapper_attributes( alley_get_wrapper_attrs() );
+```
+
 ## Testing
 
 When contributing to this project, modifications to the ruleset should have a
