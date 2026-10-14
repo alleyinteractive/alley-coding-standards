@@ -31,21 +31,23 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *  - Inline literals, including spreads of other arrays.
  *  - array_merge() and array_replace() calls, checking each argument.
  *  - Ternaries, short ternaries and null coalescing, checking each branch.
- *  - Variables inside a function, traced through every write in that function,
- *    before or after the call, since a later write can run first in a loop.
- *    Writes with `=`, `+=` and `??=` are followed; element writes have their
- *    key checked.
+ *  - Variables, traced through every write in the same function scope (or file
+ *    scope, outside of functions) that appears before the call. When the call
+ *    is inside a loop, writes later in the loop body also count. Writes with
+ *    `=`, `+=` and `??=` are followed; element writes have their key checked.
  *
- * A variable outside a function is unverifiable, since the code that includes
- * the file may already have set it (block render templates receive
- * `$attributes`, `$content` and `$block`).
- *
- * Only `=`, `+=`, `??=` and element writes at the start of a statement are
- * understood. Any other use of a traced variable, including reading it or
- * passing it to a function, makes it unverifiable, as does being a parameter
- * or closure `use` variable. It is also unverifiable when the function
+ * Only a few uses of a traced variable are understood: `=`, `+=`, `??=` and
+ * element writes at the start of a statement, and passing it to one of the
+ * READ_ONLY_FUNCTIONS. Any other use, including passing it or one of its
+ * elements to any other function, makes it unverifiable, as does being a
+ * parameter or closure `use` variable. It is also unverifiable when the scope
  * contains extract(), include/require, eval(), a variable variable (`$$name`)
- * or $GLOBALS, since those can change it without naming it.
+ * or $GLOBALS before the call, since those can change it without naming it.
+ *
+ * At file scope, a variable may already be set by the code that includes the
+ * file (block render templates receive `$attributes`, `$content` and `$block`),
+ * so it also needs an assignment that always runs before the call: one in the
+ * same block as the call or an enclosing one, not inside a condition.
  *
  * Where errors are reported (this is also where a phpcs:ignore must go):
  *  - Inline keys: on the key.
@@ -53,17 +55,17 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *  - Other uses of a traced variable: on that use of the variable.
  *  - extract(), include/require, eval(), `$$name` and $GLOBALS: on that token.
  *  - Traced untraceable assignments, e.g. `$attrs = helper();`: on the value.
- *  - Parameters, variables outside functions, unassigned variables and
- *    untraceable expressions passed directly: on the argument passed to
- *    get_block_wrapper_attributes().
+ *  - Parameters, unassigned variables and untraceable expressions passed
+ *    directly: on the argument passed to get_block_wrapper_attributes().
  * Every message includes the line of the get_block_wrapper_attributes() call.
  *
  * Known limitations:
+ *  - An unqualified call such as `array_merge( $attrs )` is assumed to be the
+ *    global function, even in a namespace that defines its own.
  *  - Some safe shapes are reported as UnverifiableKeys rather than followed:
- *    any read of the variable, such as `count( $attrs )`, `$copy = $attrs` or
- *    passing it to array_merge(), binary `+` unions (`$a + $b`), chained
- *    assignments (`$a = $b = [...]`), and array_map()/array_filter() results.
- *  - Writes after the call are checked even when they can't run before it.
+ *    any other read of the variable, such as `$attrs['class'] === 'x'` or
+ *    `$copy = $attrs`, binary `+` unions (`$a + $b`), chained assignments
+ *    (`$a = $b = [...]`), and array_map()/array_filter() results.
  *
  * Error codes:
  *  - Alley.PHP.BlockWrapperAttributes.UnescapedDynamicKey
@@ -96,6 +98,25 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 		'array_merge',
 		'array_replace',
 	];
+
+	/**
+	 * Functions a traced variable can be passed to without it becoming unverifiable.
+	 *
+	 * @var array<string>
+	 */
+	private const READ_ONLY_FUNCTIONS = [
+		'array_merge',
+		'array_replace',
+		'get_block_wrapper_attributes',
+		'sanitize_key',
+	];
+
+	/**
+	 * Tokens that start a loop.
+	 *
+	 * @var array<int|string>
+	 */
+	private const LOOP_TOKENS = [ T_FOR, T_FOREACH, T_WHILE, T_DO ];
 
 	/**
 	 * Maximum depth of nested expressions and variable chains to follow.
@@ -398,17 +419,11 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
-		// Outside a function, the code that includes the file may already have set it.
-		$owner = $this->get_scope_owner( $ref_ptr );
-		if ( null === $owner ) {
-			$this->report_unverifiable(
-				$var_ptr,
-				sprintf( '%s is outside a function, where it may already be set by the code that includes the file (block render templates receive $attributes, $content and $block)', $name )
-			);
-			return;
-		}
+		// Find the enclosing function scope, or the whole file outside of functions.
+		$owner       = $this->get_scope_owner( $ref_ptr );
+		$scope_start = null === $owner ? 0 : $this->tokens[ $owner ]['scope_opener'] + 1;
 
-		if ( $this->is_scope_input( $owner, $name ) ) {
+		if ( null !== $owner && $this->is_scope_input( $owner, $name ) ) {
 			$this->report_unverifiable(
 				$var_ptr,
 				sprintf( '%s is a parameter or closure "use" variable, so its keys are not known', $name )
@@ -416,11 +431,22 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
-		$has_base   = false;
-		$has_opaque = false;
+		// Writes later in an enclosing loop body run before the next iteration.
+		$limit = $ref_ptr;
+		foreach ( $this->tokens[ $ref_ptr ]['conditions'] as $condition_ptr => $condition_code ) {
+			if ( ( null === $owner || $condition_ptr > $owner )
+				&& in_array( $condition_code, self::LOOP_TOKENS, true )
+				&& isset( $this->tokens[ $condition_ptr ]['scope_closer'] )
+			) {
+				$limit = max( $limit, $this->tokens[ $condition_ptr ]['scope_closer'] );
+			}
+		}
 
-		// Every write in the function counts, even after the call, since it can run first in a loop.
-		for ( $i = $this->tokens[ $owner ]['scope_opener'] + 1; $i < $this->tokens[ $owner ]['scope_closer']; $i++ ) {
+		$has_base             = false;
+		$has_conditional_base = false;
+		$has_opaque           = false;
+
+		for ( $i = $scope_start; $i <= $limit; $i++ ) {
 			$code = $this->tokens[ $i ]['code'];
 
 			$hidden_write = $this->get_hidden_write( $i );
@@ -443,7 +469,12 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 
 			switch ( $usage['type'] ) {
 				case 'assign':
-					$has_base = true;
+					// At file scope the variable may already be set, so only an assignment that always runs counts.
+					if ( null !== $owner || $this->always_runs_before( $i, $ref_ptr ) ) {
+						$has_base = true;
+					} else {
+						$has_conditional_base = true;
+					}
 					$this->check_array_expression( $usage['start'], $usage['end'], $i, $depth + 1 );
 					break;
 
@@ -468,10 +499,52 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
+		if ( $has_conditional_base ) {
+			$this->report_unverifiable(
+				$var_ptr,
+				sprintf( '%s is only assigned conditionally at file scope, where it may already be set by the code that includes the file (block render templates receive $attributes, $content and $block)', $name )
+			);
+			return;
+		}
+
 		$this->report_unverifiable(
 			$var_ptr,
-			sprintf( 'no assignment to %s was found in the same function', $name )
+			sprintf( 'no assignment to %s was found in the same scope before it is used', $name )
 		);
+	}
+
+	/**
+	 * Whether an assignment always runs before a position is reached.
+	 *
+	 * True when the assignment comes first, is the start of its statement, and is
+	 * in the same block as the position or an enclosing one.
+	 *
+	 * @param int $ptr     The assigned T_VARIABLE token.
+	 * @param int $ref_ptr The position.
+	 * @return bool
+	 */
+	private function always_runs_before( int $ptr, int $ref_ptr ): bool {
+		if ( $ptr >= $ref_ptr || $this->phpcsFile->findStartOfStatement( $ptr ) !== $ptr ) {
+			return false;
+		}
+
+		if ( array_diff_key( $this->tokens[ $ptr ]['conditions'], $this->tokens[ $ref_ptr ]['conditions'] ) ) {
+			return false;
+		}
+
+		// Control structures without braces don't add conditions.
+		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $ptr - 1, null, true );
+		if ( false === $prev ) {
+			return true;
+		}
+
+		if ( in_array( $this->tokens[ $prev ]['code'], [ T_ELSE, T_DO ], true ) ) {
+			return false;
+		}
+
+		return ! ( T_CLOSE_PARENTHESIS === $this->tokens[ $prev ]['code']
+			&& isset( $this->tokens[ $prev ]['parenthesis_owner'] )
+			&& in_array( $this->tokens[ $this->tokens[ $prev ]['parenthesis_owner'] ]['code'], [ T_IF, T_ELSEIF, T_WHILE, T_FOR, T_FOREACH ], true ) );
 	}
 
 	/**
@@ -512,9 +585,9 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	/**
 	 * Determines how a variable is used at a given position.
 	 *
-	 * Only `=`, `+=`, `??=` and element writes at the start of a statement are
-	 * understood. Anything else could change the variable in a way that isn't
-	 * followed, so it's opaque.
+	 * Only a few uses are understood: `=`, `+=`, `??=` and element writes at the
+	 * start of a statement, and arguments to READ_ONLY_FUNCTIONS. Anything else
+	 * could change the variable in a way that isn't followed, so it's opaque.
 	 *
 	 * @param int $ptr The T_VARIABLE token.
 	 * @return array{type: string, start?: int|null, end?: int|null, reason?: string}
@@ -576,7 +649,77 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			}
 		}
 
-		return $this->opaque( sprintf( '%s is used other than in an assignment or an element write', $name ) );
+		$call = $this->get_enclosing_call( $ptr );
+		if ( null !== $call && in_array( $call, self::READ_ONLY_FUNCTIONS, true ) ) {
+			return [ 'type' => 'read' ];
+		}
+
+		return $this->opaque(
+			sprintf( '%s is used other than in an assignment, an element write, or a call to %s()', $name, implode( '(), ', self::READ_ONLY_FUNCTIONS ) )
+		);
+	}
+
+	/**
+	 * Returns the innermost function or method call whose arguments contain a token.
+	 *
+	 * Grouping parentheses, isset() and empty() are looked through. Parentheses
+	 * that belong to something else, such as a control structure, array() or a
+	 * function declaration, end the search.
+	 *
+	 * @param int $ptr The token.
+	 * @return string|null Lowercase name of a global function; an empty string for
+	 *                     methods, constructors, namespaced and dynamic calls; or
+	 *                     null if the token isn't inside a call's arguments.
+	 */
+	private function get_enclosing_call( int $ptr ): ?string {
+		if ( empty( $this->tokens[ $ptr ]['nested_parenthesis'] ) ) {
+			return null;
+		}
+
+		$callable_tokens = [
+			T_STRING,
+			T_VARIABLE,
+			T_SELF,
+			T_STATIC,
+			T_PARENT,
+			T_CLOSE_PARENTHESIS,
+			T_CLOSE_SQUARE_BRACKET,
+			T_CLOSE_CURLY_BRACKET,
+		];
+
+		foreach ( array_reverse( array_keys( $this->tokens[ $ptr ]['nested_parenthesis'] ) ) as $opener ) {
+			if ( isset( $this->tokens[ $opener ]['parenthesis_owner'] ) ) {
+				return null;
+			}
+
+			$name_ptr = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $opener - 1, null, true );
+			if ( false === $name_ptr || ! in_array( $this->tokens[ $name_ptr ]['code'], $callable_tokens, true ) ) {
+				continue;
+			}
+
+			if ( T_STRING !== $this->tokens[ $name_ptr ]['code'] ) {
+				return '';
+			}
+
+			$before = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $name_ptr - 1, null, true );
+			$code   = false === $before ? null : $this->tokens[ $before ]['code'];
+
+			if ( in_array( $code, [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW ], true ) ) {
+				return '';
+			}
+
+			// `\count()` is the global function; `Project\count()` and `namespace\count()` are not.
+			if ( T_NS_SEPARATOR === $code ) {
+				$qualifier = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $before - 1, null, true );
+				if ( false !== $qualifier && in_array( $this->tokens[ $qualifier ]['code'], [ T_STRING, T_NAMESPACE ], true ) ) {
+					return '';
+				}
+			}
+
+			return strtolower( $this->tokens[ $name_ptr ]['content'] );
+		}
+
+		return null;
 	}
 
 	/**

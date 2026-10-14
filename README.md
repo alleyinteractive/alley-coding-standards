@@ -100,26 +100,45 @@ hyphen, so a literal prefix like `'data-'` or `'aria-'` rules them out.
 
 The sniff follows the array through inline literals, `array_merge()`,
 `array_replace()`, ternaries, `??`, spreads, and writes to variables in the same
-function. Every write in the function is checked, even after the call, since a
-later write can run first in a loop. Anything it can't verify is an error:
+function (or file, outside of functions) before the call. If the call is inside
+a loop, writes later in the loop body count too, since they run before the next
+iteration. Anything it can't verify is an error:
 
 - `UnescapedDynamicKey`: a visible key that isn't provably safe, such as `$key`,
   `"data-{$key}"`, `esc_attr( $key )`, a constant, or a bare `sanitize_key( $key )`.
   Use `'data-' . sanitize_key( $key )`.
 - `UnverifiableKeys`: the keys can't be seen. Common causes:
   - a function parameter, including an arrow function's
-  - any variable outside a function: block render templates and template parts
-    receive variables from the code that includes them, such as the block's
-    `$attributes`
+  - the block's `$attributes`, or any variable at file scope that is only
+    assigned inside an `if`, loop or other condition: block render templates
+    and template parts receive variables from the code that includes them, so
+    if the assignment doesn't run, the included value is used
   - a closure `use` variable, or a variable captured by reference (`use ( &$attrs )`)
   - a helper's return value or an object property
   - `$a + $b` unions, `array_map()`/`array_filter()` results, chained
     assignments (`$a = $b = [ ... ]`) and destructuring
-  - any other use of the variable, such as `count( $attrs )`, `$copy = $attrs`
-    or passing it to `array_merge()`
+  - a variable or one of its elements passed to a function before the call,
+    other than `array_merge()`, `array_replace()` and `sanitize_key()`
+  - any other use of the variable before the call, such as `$copy = $attrs` or
+    `if ( 'wide' === $attrs['class'] )`
   - `extract()`, `include`/`require`, `eval()`, a variable variable (`$$name`)
-    or `$GLOBALS` anywhere in the same function, since
+    or `$GLOBALS` anywhere in the same scope before the call, since
     these can change the array without naming it
+
+#### Passing the array to other functions
+
+A function that takes the array by reference could add keys, so any function or
+method call that receives the array, or one of its elements, before
+`get_block_wrapper_attributes()` makes it unverifiable. The exceptions are
+`array_merge()`, `array_replace()`, `sanitize_key()` and
+`get_block_wrapper_attributes()` itself.
+
+That includes read-only PHP functions like `count( $attrs )` and
+`esc_html( $attrs['class'] )`. PHPCS can't see WordPress or project functions,
+and checking PHP's own would make results depend on which extensions are
+installed where PHPCS runs. Move those reads after the
+`get_block_wrapper_attributes()` call, or read the value from wherever it came
+from before it went into the array.
 
 #### Where the error is reported
 
@@ -134,7 +153,7 @@ names the line of the `get_block_wrapper_attributes()` call it relates to.
 | Any other use of the variable, e.g. passing it to a function | that use of the variable |
 | `extract()`, `include`/`require`, `eval()`, `$$name` or `$GLOBALS` | that construct |
 | Untraceable assignment, e.g. `$attrs = alley_get_attrs();` | the assigned value |
-| Parameter, variable outside a function, unassigned variable, or a helper result or property passed directly | the argument to `get_block_wrapper_attributes()` |
+| Parameter, unassigned variable, or a helper result or property passed directly | the argument to `get_block_wrapper_attributes()` |
 
 If you've confirmed the keys are safe, ignore the specific code on that line,
 with a reason:
