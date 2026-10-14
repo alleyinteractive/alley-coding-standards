@@ -32,6 +32,10 @@ class FixtureTest extends TestCase {
 	/**
 	 * Test that fixtures fail.
 	 *
+	 * An expectations file returns a list of error sources. A source may instead
+	 * be a key mapped to a list of line numbers, in which case that source must be
+	 * reported on exactly those lines.
+	 *
 	 * @param string $file The file to test.
 	 * @param string $expectation The expectations file for this test.
 	 */
@@ -43,11 +47,53 @@ class FixtureTest extends TestCase {
 			$expectations = include $expectation;
 		}
 
+		$sources        = [];
+		$expected_lines = [];
+
+		foreach ( $expectations as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$sources[]              = $key;
+				$expected_lines[ $key ] = $value;
+			} else {
+				$sources[] = $value;
+			}
+		}
+
+		$output = $this->run_phpcs( $file );
+
 		$this->process_phpcs_output(
-			$this->run_phpcs( $file ),
-			ignored_errors: $expectations,
+			$output,
+			ignored_errors: $sources,
 			expect_to_fail: true
 		);
+
+		$this->assert_error_lines( $output, $expected_lines );
+	}
+
+	/**
+	 * Assert that each error source is reported on exactly the expected lines.
+	 *
+	 * @param array<mixed>         $output         The PHPCS output.
+	 * @param array<string, int[]> $expected_lines Expected line numbers, keyed by error source.
+	 */
+	protected function assert_error_lines( array $output, array $expected_lines ): void {
+		foreach ( $expected_lines as $source => $lines ) {
+			$actual = [];
+
+			foreach ( $output['files'] as $data ) {
+				foreach ( $data['messages'] as $message ) {
+					if ( $source === $message['source'] ) {
+						$actual[] = $message['line'];
+					}
+				}
+			}
+
+			$actual = array_values( array_unique( $actual ) );
+			sort( $actual );
+			sort( $lines );
+
+			$this->assertSame( $lines, $actual, sprintf( 'Lines reported for %s do not match.', $source ) );
+		}
 	}
 
 	/**

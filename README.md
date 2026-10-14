@@ -72,6 +72,67 @@ references these rules, like this:
 </ruleset>
 ```
 
+## Custom Sniffs
+
+### Alley.PHP.BlockWrapperAttributes
+
+`get_block_wrapper_attributes()` escapes attribute values, but not the array
+keys, which become attribute names. This sniff requires every key to be a string
+or integer literal, or to be wrapped entirely in `sanitize_key()`:
+
+```php
+// Passes.
+echo get_block_wrapper_attributes( [ 'data-id' => $id ] );
+echo get_block_wrapper_attributes( [ sanitize_key( $key ) => $value ] );
+
+// Fails with UnsafeKey.
+echo get_block_wrapper_attributes( [ $key => $value ] );
+echo get_block_wrapper_attributes( [ 'data-' . $key => $value ] );
+```
+
+When the argument is a variable, the sniff checks every assignment to it in the
+enclosing function (or file) before the call, or through the end of the loop if
+the call is inside one. If it cannot see the keys (for example, the variable is
+a function parameter, is built with `array_merge()` or `+=`, is destructured
+into, or is passed to another function that could change it by reference, such
+as `parse_str()`), it reports `UnverifiableKeys`. This favors false positives over missed
+issues. If it is too noisy for your project, you can exclude that error code
+alone:
+
+```xml
+<rule ref="Alley-Interactive">
+  <exclude name="Alley.PHP.BlockWrapperAttributes.UnverifiableKeys" />
+</rule>
+```
+
+### Alley.PHP.DisallowShortEchoTag
+
+Disallows the short echo tag (`<?=`), even when `short_open_tag` is enabled in
+`php.ini`. Use `<?php echo ... ?>` instead.
+
+### Alley.PHP.FilterCallbackTypehint
+
+Flags a typehint on the first parameter of an `add_filter()` callback. Core or
+other plugins may pass a different type than the one declared, which causes a
+fatal error. Check the type inside the callback instead, or use `mixed`. Only
+the first parameter is checked, and `add_action()` callbacks are not checked.
+Closures, arrow functions, named functions, array callbacks, and first-class
+callables are supported. Violations can be fixed with `phpcbf`.
+
+```php
+// Passes.
+add_filter( 'the_title', fn( $title ) => (string) $title );
+add_filter( 'the_title', fn( mixed $title ) => (string) $title );
+
+// Fails with ParameterTypehint.
+add_filter( 'the_title', fn( string $title ) => $title );
+```
+
+### Alley.PHP.StrictTypeDeclarationSpacing
+
+Requires `declare(strict_types=1);` with no whitespace inside the parentheses
+or around the equals sign. Violations can be fixed with `phpcbf`.
+
 ## Testing
 
 When contributing to this project, modifications to the ruleset should have a
@@ -90,6 +151,16 @@ keeping the files smaller and focused on the specific sniff being tested.
 A corresponding file should be created in `tests/fixtures/fail/expectations`
 referencing the expected source of the failures for that test file. Name the file
 the same as you do the fixture (e.g. `tests/fixtures/fail/foo.php` and `tests/fixtures/fail/expectations/foo.php`).
+
+To also check where each error is reported, map the source to a list of line
+numbers. The test then fails unless that source is reported on exactly those
+lines:
+
+```php
+return [
+	'Alley.PHP.BlockWrapperAttributes.UnsafeKey' => [ 9, 12, 15 ],
+];
+```
 
 ## Changelog
 
