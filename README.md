@@ -119,10 +119,8 @@ iteration. Anything it can't verify is an error:
     assignments (`$a = $b = [ ... ]`) and destructuring
   - a variable or one of its elements passed to a function before the call,
     other than `array_merge()`, `array_replace()` and `sanitize_key()`
-  - any other use of the variable before the call, such as `$copy = $attrs` or
-    `if ( 'wide' === $attrs['class'] )`
   - `extract()`, `include`/`require`, `eval()`, a variable variable (`$$name`)
-    or `$GLOBALS` anywhere in the same scope before the call, since
+    or a write to `$GLOBALS` anywhere in the same scope before the call, since
     these can change the array without naming it
 
 #### Passing the array to other functions
@@ -150,8 +148,8 @@ names the line of the `get_block_wrapper_attributes()` call it relates to.
 | --- | --- |
 | Inline key, e.g. `[ $key => 1 ]` | the key |
 | Element write, e.g. `$attrs[ $key ] = 1;` | the key in that write |
-| Any other use of the variable, e.g. passing it to a function | that use of the variable |
-| `extract()`, `include`/`require`, `eval()`, `$$name` or `$GLOBALS` | that construct |
+| Variable or element passed to a function, captured by reference, or changed with another operator | that use of the variable |
+| `extract()`, `include`/`require`, `eval()`, `$$name` or a `$GLOBALS` write | that construct |
 | Untraceable assignment, e.g. `$attrs = alley_get_attrs();` | the assigned value |
 | Parameter, unassigned variable, or a helper result or property passed directly | the argument to `get_block_wrapper_attributes()` |
 
