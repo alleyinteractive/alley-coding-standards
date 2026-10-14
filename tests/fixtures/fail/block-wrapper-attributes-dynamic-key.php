@@ -11,10 +11,9 @@
 /**
  * Dynamic keys.
  *
- * @param string $key  A dynamic key.
- * @param bool   $flag A flag.
+ * @param string $key A dynamic key.
  */
-function alley_block_wrapper_dynamic_keys( string $key, bool $flag ): void {
+function alley_block_wrapper_dynamic_keys( string $key ): void {
 	// Inline variable key.
 	echo get_block_wrapper_attributes( [ $key => 'value' ] );
 
@@ -42,8 +41,8 @@ function alley_block_wrapper_dynamic_keys( string $key, bool $flag ): void {
 	// The hyphenated literal has to come first.
 	echo get_block_wrapper_attributes( [ sanitize_key( $key ) . '-data' => 'value' ] );
 
-	// Dynamic key inside a ternary branch.
-	echo get_block_wrapper_attributes( $flag ? [ 'class' => 'x' ] : [ $key => 'y' ] );
+	// A later literal can't contain characters sanitize_key() strips, such as a space.
+	echo get_block_wrapper_attributes( [ 'data-' . sanitize_key( $key ) . ' on' . sanitize_key( $key ) => 'value' ] );
 
 	// Dynamic key inside an array_merge() argument.
 	echo get_block_wrapper_attributes( array_merge( [ 'class' => 'x' ], [ $key => 'y' ] ) );

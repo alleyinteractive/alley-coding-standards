@@ -14,8 +14,9 @@
  * @param array  $param  A parameter.
  * @param array  $other  Another array.
  * @param object $object An object.
+ * @param bool   $flag   A flag.
  */
-function alley_block_wrapper_unverifiable( array $param, array $other, object $object ): void {
+function alley_block_wrapper_unverifiable( array $param, array $other, object $object, bool $flag ): void {
 	// Object property.
 	echo get_block_wrapper_attributes( $object->attrs );
 
@@ -39,8 +40,10 @@ function alley_block_wrapper_unverifiable( array $param, array $other, object $o
 	// Opaque array inside array_merge().
 	echo get_block_wrapper_attributes( array_merge( [ 'class' => 'x' ], $other ) );
 
-	// Opaque branch of a null coalescing expression.
+	// Ternaries and null coalescing aren't followed, even with literal branches.
+	echo get_block_wrapper_attributes( $flag ? [ 'class' => 'x' ] : [ 'class' => 'y' ] );
 	echo get_block_wrapper_attributes( $param ?? [ 'class' => 'x' ] );
+	echo get_block_wrapper_attributes( $param += $flag ? [] : [] );
 
 	// Argument unpacking.
 	echo get_block_wrapper_attributes( ...$other );

@@ -97,8 +97,12 @@ make a value safe there: `[ sanitize_key( $key ) => $value ]` with `onmouseover`
 and `alert(1)` renders a working event handler. No event handler contains a
 hyphen, so a literal prefix like `'data-'` or `'aria-'` rules them out.
 
-The sniff checks inline array literals, `array_merge()`, `array_replace()`,
-ternaries, `??` and spreads. Anything it can't verify is an error:
+Every other literal in a key that uses `sanitize_key()` may only contain letters,
+digits, `_` and `-`, so a literal like `' on'` can't start a second attribute.
+
+The sniff checks inline array literals, `array_merge()`, `array_replace()` and
+spreads. Anything it can't verify is an error, including ternaries and `??`
+even when every branch is a literal:
 
 - `UnescapedDynamicKey`: a visible key that isn't provably safe, such as `$key`,
   `"data-{$key}"`, `esc_attr( $key )`, a constant, or a bare `sanitize_key( $key )`.

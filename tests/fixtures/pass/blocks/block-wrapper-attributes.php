@@ -27,13 +27,13 @@ echo get_block_wrapper_attributes(
 		'data-' . sanitize_key( $attributes['k'] )         => 'b',
 		( 'data-grouped' )                                 => 'c',
 		( 'aria-' ) . ( sanitize_key( $attributes['a'] ) ) => 'd',
+		'data-' . sanitize_key( $attributes['b'] ) . '-x'  => 'e',
 	]
 );
 
-// Merging, replacing, ternaries and spreads of literals.
+// Merging, replacing and spreads of literals.
 echo get_block_wrapper_attributes( array_merge( [ 'class' => 'base' ], [ 'id' => 'merged' ] ) );
 echo get_block_wrapper_attributes( array_replace( [ 'class' => 'base' ], [ 'class' => 'replaced' ] ) );
-echo get_block_wrapper_attributes( ! empty( $attributes['wide'] ) ? [ 'class' => 'wide' ] : [ 'class' => 'narrow' ] );
 echo get_block_wrapper_attributes(
 	[
 		'class' => 'spread',

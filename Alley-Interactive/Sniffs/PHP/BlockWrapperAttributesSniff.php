@@ -19,7 +19,8 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * esc_attr(), but the array keys become attribute names and are output as-is.
  * Keys must be string or integer literals, or concatenations of literals and
  * sanitize_key() calls that start with a string literal containing a hyphen,
- * such as `'data-' . sanitize_key( $key )`. A bare sanitize_key() call is not
+ * such as `'data-' . sanitize_key( $key )`. In a concatenation with
+ * sanitize_key(), every literal may only contain letters, digits, `_` and `-`. A bare sanitize_key() call is not
  * enough: it still allows names like `onclick` and `style`, whose values
  * esc_attr() does not make safe.
  *
@@ -30,9 +31,8 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * Supported shapes for the passed array:
  *  - Inline literals, including spreads of other arrays.
  *  - array_merge() and array_replace() calls, checking each argument.
- *  - Ternaries, short ternaries and null coalescing, checking each branch.
- * Anything else, such as a variable, a function parameter, an object property
- * or a helper's return value, is reported as UnverifiableKeys.
+ * Anything else, such as a variable, a function parameter, an object property,
+ * a helper's return value, a ternary or `??`, is reported as UnverifiableKeys.
  *
  * Where errors are reported (this is also where a phpcs:ignore must go):
  *  - Inline keys: on the key.
@@ -143,34 +143,6 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
-		// Ternaries: every possible result must be safe.
-		$then = $this->find_top_level( $start, $end, [ T_INLINE_THEN ] );
-		if ( null !== $then ) {
-			$else = $this->find_top_level( $then + 1, $end, [ T_INLINE_ELSE ] );
-			if ( null === $else ) {
-				$this->report_unverifiable( $start, 'the ternary could not be parsed' );
-				return;
-			}
-
-			$after_then = $this->phpcsFile->findNext( Tokens::$emptyTokens, $then + 1, null, true );
-			if ( $after_then === $else ) {
-				// Short ternary: the condition itself is a possible result.
-				$this->check_array_expression( $start, $then - 1, $depth + 1 );
-			} else {
-				$this->check_array_expression( $then + 1, $else - 1, $depth + 1 );
-			}
-			$this->check_array_expression( $else + 1, $end, $depth + 1 );
-			return;
-		}
-
-		// Null coalescing: both sides are possible results.
-		$coalesce = $this->find_top_level( $start, $end, [ T_COALESCE ] );
-		if ( null !== $coalesce ) {
-			$this->check_array_expression( $start, $coalesce - 1, $depth + 1 );
-			$this->check_array_expression( $coalesce + 1, $end, $depth + 1 );
-			return;
-		}
-
 		$code = $this->tokens[ $start ]['code'];
 
 		// Wrapping parentheses.
@@ -264,6 +236,8 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	 * calls. A key containing sanitize_key() must start with a string literal
 	 * containing a hyphen: sanitize_key() allows any lowercase name, including
 	 * event handlers like `onclick`, and no event handler contains a hyphen.
+	 * Every literal in it must also be limited to the characters sanitize_key()
+	 * allows, so a literal like `' on'` can't start a second attribute.
 	 *
 	 * @param int $start First non-empty token of the key expression.
 	 * @param int $end   Last non-empty token of the key expression.
@@ -276,11 +250,15 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 		}
 
 		$has_sanitized = false;
+		$has_unsafe    = false;
 
 		foreach ( $operands as [ $operand_start, $operand_end ] ) {
 			if ( $operand_start === $operand_end
 				&& in_array( $this->tokens[ $operand_start ]['code'], [ T_CONSTANT_ENCAPSED_STRING, T_LNUMBER ], true )
 			) {
+				if ( ! preg_match( '/^([\'"]?)[A-Za-z0-9_-]*\1$/', $this->tokens[ $operand_start ]['content'] ) ) {
+					$has_unsafe = true;
+				}
 				continue;
 			}
 
@@ -294,6 +272,10 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 
 		if ( ! $has_sanitized ) {
 			return true;
+		}
+
+		if ( $has_unsafe ) {
+			return false;
 		}
 
 		$prefix = $operands[0][0];
