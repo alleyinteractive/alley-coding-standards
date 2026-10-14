@@ -78,7 +78,15 @@ references these rules, like this:
 
 `get_block_wrapper_attributes()` escapes attribute values, but not the array
 keys, which become attribute names. This sniff requires every key to be a string
-or integer literal, or to be wrapped entirely in `sanitize_key()`:
+or integer literal, or to be wrapped entirely in `sanitize_key()`.
+
+When the argument is a variable, the sniff checks every assignment to it in the
+enclosing function (or file) before the call, or through the end of the loop if
+the call is inside one.
+
+#### UnsafeKey
+
+A key is something other than a literal or a whole `sanitize_key()` call:
 
 ```php
 // Passes.
@@ -90,14 +98,31 @@ echo get_block_wrapper_attributes( [ $key => $value ] );
 echo get_block_wrapper_attributes( [ 'data-' . $key => $value ] );
 ```
 
-When the argument is a variable, the sniff checks every assignment to it in the
-enclosing function (or file) before the call, or through the end of the loop if
-the call is inside one. If it cannot see the keys (for example, the variable is
-a function parameter, is built with `array_merge()` or `+=`, is destructured
-into, or is passed to another function that could change it by reference, such
-as `parse_str()`), it reports `UnverifiableKeys`. This favors false positives over missed
-issues. If it is too noisy for your project, you can exclude that error code
-alone:
+#### UnverifiableKeys
+
+The sniff cannot see the keys. This happens when the argument is not an array
+literal or a variable, or when the variable:
+
+- is a function, closure, or arrow function parameter
+- is assigned something other than an array literal, or changed with `+=` or `??=`
+- is destructured into, with `[ $attrs ] = ...` or `list( ... ) = ...`
+- is passed to another function, which could change it by reference (e.g.
+  `parse_str()`)
+- is a reference, a `global`, or a `foreach` variable
+- is never assigned an array in the same scope
+
+```php
+// Fails with UnverifiableKeys.
+echo get_block_wrapper_attributes( array_merge( $defaults, $extra ) );
+
+function render( $attributes ) {
+	return get_block_wrapper_attributes( $attributes );
+}
+```
+
+This favors false positives over missed issues: a harmless call like
+`count( $attrs )` before the call is flagged too. If it is too noisy for your
+project, you can exclude that error code alone:
 
 ```xml
 <rule ref="Alley-Interactive">

@@ -16,16 +16,12 @@ use WordPressCS\WordPress\Sniff;
 /**
  * Flags dynamic array keys passed to get_block_wrapper_attributes().
  *
- * Values passed to get_block_wrapper_attributes() are escaped with esc_attr(),
- * but keys become attribute names and are not escaped. Keys must be string or
- * integer literals, or be wrapped entirely in sanitize_key().
+ * Keys become attribute names and are not escaped, unlike values. What each
+ * error code covers is documented in the README.
  *
- * When the argument is a variable, every assignment to that variable in the
- * enclosing function (or file, if there is none) before the call is checked,
- * through the end of the outermost enclosing loop when the call is in one.
- * This is a linear token scan with no branch awareness: anything the sniff
- * cannot analyze is flagged rather than ignored, including destructuring and
- * passing the variable to another function, which may change it by reference.
+ * Variables are traced with a linear token scan that has no branch awareness,
+ * so an unsafe assignment in any branch is flagged. Anything the scan cannot
+ * analyze is flagged rather than ignored.
  *
  * Error codes:
  *  - Alley.PHP.BlockWrapperAttributes.UnsafeKey
