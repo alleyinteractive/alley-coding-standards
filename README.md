@@ -76,8 +76,9 @@ references these rules, like this:
 
 `get_block_wrapper_attributes()` escapes attribute values, but the array keys
 become attribute names and are output as-is. The `Alley.PHP.BlockWrapperAttributes`
-sniff requires every key to be a string or integer literal, a `sanitize_key()`
-call, or a concatenation of only those:
+sniff requires every key to be a string or integer literal, or a concatenation
+of literals and `sanitize_key()` calls that starts with a literal containing a
+hyphen:
 
 ```php
 $wrapper_attributes = [
@@ -85,14 +86,17 @@ $wrapper_attributes = [
 	'data-id' => $attributes['id'], // Values are escaped for you.
 ];
 
-$wrapper_attributes[ sanitize_key( $key ) ]           = $value;
 $wrapper_attributes[ 'data-' . sanitize_key( $key ) ] = $value;
 
 echo get_block_wrapper_attributes( $wrapper_attributes );
 ```
 
-Note that `sanitize_key()` lowercases the key and strips everything except
-`a-z`, `0-9`, `_` and `-`.
+`sanitize_key()` lowercases the key and strips everything except `a-z`, `0-9`,
+`_` and `-`. That stops a key from breaking out of the attribute name, but on its
+own it still allows names like `onclick` or `style`, and `esc_attr()` doesn't
+make a value safe there: `[ sanitize_key( $key ) => $value ]` with `onmouseover`
+and `alert(1)` renders a working event handler. No event handler contains a
+hyphen, so a literal prefix like `'data-'` or `'aria-'` rules them out.
 
 The sniff follows the array through inline literals, `array_merge()`,
 `array_replace()`, ternaries, `??`, spreads, and writes to variables in the same
@@ -101,9 +105,14 @@ a loop, writes later in the loop body count too, since they run before the next
 iteration. Anything it can't verify is an error:
 
 - `UnescapedDynamicKey`: a visible key that isn't provably safe, such as `$key`,
-  `"data-{$key}"`, `esc_attr( $key )` or a constant. Wrap it in `sanitize_key()`.
+  `"data-{$key}"`, `esc_attr( $key )`, a constant, or a bare `sanitize_key( $key )`.
+  Use `'data-' . sanitize_key( $key )`.
 - `UnverifiableKeys`: the keys can't be seen. Common causes:
-  - a function parameter, including the block's `$attributes`
+  - a function parameter, including an arrow function's
+  - the block's `$attributes`, or any variable at file scope that is only
+    assigned inside an `if`, loop or other condition: block render templates
+    and template parts receive variables from the code that includes them, so
+    if the assignment doesn't run, the included value is used
   - a closure `use` variable, or a variable captured by reference (`use ( &$attrs )`)
   - a helper's return value or an object property
   - `$a + $b` unions, `array_map()`/`array_filter()` results, chained
@@ -122,9 +131,15 @@ to know the function is read-only:
   `in_array( 'x', $attrs )` and `implode( ' ', $attrs )` are fine;
   `sort( $attrs )` and `preg_match( $pattern, $subject, $attrs )` are not.
 - **WordPress and project functions, methods and closures** aren't loaded when
-  PHPCS runs, so they always make the array unverifiable. The exceptions are
-  `array_merge()`, `array_replace()`, `sanitize_key()` and
+  PHPCS runs, so they always make the array unverifiable. That includes
+  namespaced functions that share a built-in's name, such as `Project\count()`.
+  The exceptions are `array_merge()`, `array_replace()`, `sanitize_key()` and
   `get_block_wrapper_attributes()` itself.
+
+Wrapping the argument in parentheses, as in `alley_modify( ( $attrs ) )`, still
+passes it by reference. Passing one element, as in `alley_modify( $attrs[ $key ] )`,
+is checked like `$attrs[ $key ] = ...`, because a by-reference parameter creates
+the key.
 
 #### Where the error is reported
 
@@ -135,7 +150,7 @@ names the line of the `get_block_wrapper_attributes()` call it relates to.
 | Cause | Reported on |
 | --- | --- |
 | Inline key, e.g. `[ $key => 1 ]` | the key |
-| Element write, e.g. `$attrs[ $key ] = 1;` | the key in that write |
+| Element write, e.g. `$attrs[ $key ] = 1;` or `alley_modify( $attrs[ $key ] );` | the key in that write |
 | Variable passed to a function, captured by reference, or changed with another operator | that use of the variable |
 | `extract()`, `include`/`require`, `eval()`, `$$name` or a `$GLOBALS` write | that construct |
 | Untraceable assignment, e.g. `$attrs = alley_get_attrs();` | the assigned value |

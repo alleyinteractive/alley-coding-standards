@@ -34,10 +34,29 @@ function alley_block_wrapper_dynamic_keys( string $key, bool $flag, array $items
 	// Concatenation with an unsanitized part.
 	echo get_block_wrapper_attributes( [ 'data-' . $key => 'value' ] );
 
+	// sanitize_key() alone still allows event handlers such as onclick.
+	echo get_block_wrapper_attributes( [ sanitize_key( $key ) => 'value' ] );
+
+	// A prefix without a hyphen can still form an event handler.
+	echo get_block_wrapper_attributes( [ 'on' . sanitize_key( $key ) => 'value' ] );
+
+	// The hyphenated literal has to come first.
+	echo get_block_wrapper_attributes( [ sanitize_key( $key ) . '-data' => 'value' ] );
+
+	// Traced variable with a bare sanitize_key() key.
+	$sanitized                         = [ 'class' => 'x' ];
+	$sanitized[ sanitize_key( $key ) ] = 'value';
+	echo get_block_wrapper_attributes( $sanitized );
+
 	// Traced variable with a dynamic key.
 	$attrs         = [ 'class' => 'x' ];
 	$attrs[ $key ] = 'value';
 	echo get_block_wrapper_attributes( $attrs );
+
+	// Element passed to a function, which creates the key if it takes it by reference.
+	$touched = [ 'class' => 'x' ];
+	alley_touch( $touched[ $key ] );
+	echo get_block_wrapper_attributes( $touched );
 
 	// Dynamic key written in a foreach loop.
 	$looped = [];

@@ -17,9 +17,15 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *
  * The get_block_wrapper_attributes() function escapes attribute values with
  * esc_attr(), but the array keys become attribute names and are output as-is.
- * Keys must be string or integer literals, sanitize_key() calls, or
- * concatenations of only those. Anything the sniff cannot prove safe is an
- * error: a false positive can be ignored, a missed unsafe key ships.
+ * Keys must be string or integer literals, or concatenations of literals and
+ * sanitize_key() calls that start with a string literal containing a hyphen,
+ * such as `'data-' . sanitize_key( $key )`. A bare sanitize_key() call is not
+ * enough: it still allows names like `onclick` and `style`, whose values
+ * esc_attr() does not make safe.
+ *
+ * Anything the sniff cannot prove safe is an error. A false positive can be
+ * suppressed with phpcs:ignore once someone has checked the keys, but a false
+ * negative lets an unsafe key reach production without anyone noticing.
  *
  * Supported shapes for the passed array:
  *  - Inline literals, including spreads of other arrays.
@@ -30,20 +36,30 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  *    is inside a loop, writes later in the loop body also count. Writes with
  *    `=`, `+=` and `??=` are followed; element writes have their key checked.
  *
- * A traced variable is unverifiable when it is a parameter, closure `use`
- * variable, global, static, foreach variable, destructuring target, reference
- * (including a by-reference closure capture), is never assigned, is changed by
- * any other operator, or is passed to a function that might modify it before
- * the call. It is also unverifiable when the scope contains extract(),
- * include/require, eval(), a variable variable (`$$name`) or a write to
- * $GLOBALS before the call, since those can change it without naming it. Built-in PHP functions are checked with reflection, so `count()` is
- * allowed but `sort()` is not. Other functions are only allowed if listed in
- * READ_ONLY_FUNCTIONS, since their definitions aren't loaded.
+ * A traced variable is unverifiable when it is a parameter (including an arrow
+ * function parameter), closure `use` variable, global, static, foreach
+ * variable, destructuring target, reference (including a by-reference closure
+ * capture), is never assigned, is changed by any other operator, or is passed
+ * to a function that might modify it before the call. It is also unverifiable
+ * when the scope contains extract(), include/require, eval(), a variable
+ * variable (`$$name`) or a write to $GLOBALS before the call, since those can
+ * change it without naming it. Built-in PHP functions are checked with
+ * reflection, so `count()` is allowed but `sort()` is not. Other functions,
+ * including namespaced calls such as `Project\count()`, are only allowed if
+ * listed in READ_ONLY_FUNCTIONS, since their definitions aren't loaded. Passing
+ * an element, such as `foo( $attrs[ $key ] )`, is checked like a write to that
+ * key, since a by-reference parameter creates it.
+ *
+ * At file scope, a variable may already be set by the code that includes the
+ * file (block render templates receive `$attributes`, `$content` and `$block`),
+ * so it also needs an assignment that always runs before the call: one in the
+ * same block as the call or an enclosing one, not inside a condition.
  *
  * Where errors are reported (this is also where a phpcs:ignore must go):
  *  - Inline keys: on the key.
- *  - Traced element writes: on the key of the write, e.g. `$attrs[ $key ] = 1;`.
- *  - Traced opaque writes or function calls: on that occurrence of the variable.
+ *  - Traced element writes, including elements passed to a function: on the
+ *    key, e.g. `$attrs[ $key ] = 1;`.
+ *  - Traced opaque writes or function calls: on that use of the variable.
  *  - extract(), include/require, eval(), `$$name` and $GLOBALS: on that token.
  *  - Traced untraceable assignments, e.g. `$attrs = helper();`: on the value.
  *  - Parameters, unassigned variables and untraceable expressions passed
@@ -51,8 +67,10 @@ use WordPressCS\WordPress\AbstractFunctionParameterSniff;
  * Every message includes the line of the get_block_wrapper_attributes() call.
  *
  * Known limitations:
- *  - Arrow functions are not treated as a separate scope; a call inside one is
- *    traced through the enclosing function.
+ *  - Arrow functions capture the enclosing scope by value, so apart from their
+ *    parameters, a call inside one is traced through the enclosing function.
+ *  - An unqualified call such as `count( $attrs )` is assumed to be the global
+ *    function, even in a namespace that defines its own `count()`.
  *  - Some safe shapes are reported as UnverifiableKeys rather than followed:
  *    binary `+` unions (`$a + $b`), chained assignments (`$a = $b = [...]`),
  *    closure `use` variables, and array_map()/array_filter() results.
@@ -303,7 +321,7 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 		}
 
 		$this->report(
-			'Keys passed to get_block_wrapper_attributes() (line %s) become HTML attribute names and are not escaped. Use a string literal or wrap the key in sanitize_key(); found %s.',
+			'Keys passed to get_block_wrapper_attributes() (line %s) become HTML attribute names and are not escaped. Use a string literal, or sanitize_key() after a literal prefix containing a hyphen, such as \'data-\' . sanitize_key( $key ); sanitize_key() alone still allows names like onclick. Found %s.',
 			$range[0],
 			'UnescapedDynamicKey',
 			[ $this->tokens[ $this->call_ptr ]['line'], $this->get_content( $range[0], $range[1] ) ]
@@ -311,40 +329,81 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	}
 
 	/**
-	 * Whether a key expression is a literal, a sanitize_key() call, or a concatenation of only those.
+	 * Whether a key expression is provably safe to use as an attribute name.
+	 *
+	 * Safe keys are literals, or concatenations of literals and sanitize_key()
+	 * calls. A key containing sanitize_key() must start with a string literal
+	 * containing a hyphen: sanitize_key() allows any lowercase name, including
+	 * event handlers like `onclick`, and no event handler contains a hyphen.
 	 *
 	 * @param int $start First non-empty token of the key expression.
 	 * @param int $end   Last non-empty token of the key expression.
 	 * @return bool
 	 */
 	private function is_safe_key( int $start, int $end ): bool {
-		$concat = $this->find_top_level( $start, $end, [ T_STRING_CONCAT ] );
-		if ( null !== $concat ) {
-			$left  = $this->trim_range( $start, $concat - 1 );
-			$right = $this->trim_range( $concat + 1, $end );
-
-			return null !== $left
-				&& null !== $right
-				&& $this->is_safe_key( $left[0], $left[1] )
-				&& $this->is_safe_key( $right[0], $right[1] );
+		$operands = $this->get_concat_operands( $start, $end );
+		if ( null === $operands ) {
+			return false;
 		}
 
-		$code = $this->tokens[ $start ]['code'];
+		$has_sanitized = false;
 
-		if ( $start === $end ) {
-			return in_array( $code, [ T_CONSTANT_ENCAPSED_STRING, T_LNUMBER ], true );
+		foreach ( $operands as [ $operand_start, $operand_end ] ) {
+			if ( $operand_start === $operand_end
+				&& in_array( $this->tokens[ $operand_start ]['code'], [ T_CONSTANT_ENCAPSED_STRING, T_LNUMBER ], true )
+			) {
+				continue;
+			}
+
+			$call = $this->get_function_call( $operand_start, $operand_end );
+			if ( null === $call || 'sanitize_key' !== $call['name'] ) {
+				return false;
+			}
+
+			$has_sanitized = true;
 		}
 
-		if ( T_OPEN_PARENTHESIS === $code
+		if ( ! $has_sanitized ) {
+			return true;
+		}
+
+		$prefix = $operands[0][0];
+
+		return $operands[0][1] === $prefix
+			&& T_CONSTANT_ENCAPSED_STRING === $this->tokens[ $prefix ]['code']
+			&& false !== strpos( $this->tokens[ $prefix ]['content'], '-' );
+	}
+
+	/**
+	 * Splits a concatenation into its operands, unwrapping parentheses.
+	 *
+	 * @param int $start First token of the expression.
+	 * @param int $end   Last token of the expression.
+	 * @return array<array{int, int}>|null First and last non-empty token of each operand, or null if one is empty.
+	 */
+	private function get_concat_operands( int $start, int $end ): ?array {
+		$range = $this->trim_range( $start, $end );
+		if ( null === $range ) {
+			return null;
+		}
+		[ $start, $end ] = $range;
+
+		if ( T_OPEN_PARENTHESIS === $this->tokens[ $start ]['code']
 			&& ! isset( $this->tokens[ $start ]['parenthesis_owner'] )
 			&& $this->tokens[ $start ]['parenthesis_closer'] === $end
 		) {
-			$inner = $this->trim_range( $start + 1, $end - 1 );
-			return null !== $inner && $this->is_safe_key( $inner[0], $inner[1] );
+			return $this->get_concat_operands( $start + 1, $end - 1 );
 		}
 
-		$call = $this->get_function_call( $start, $end );
-		return null !== $call && 'sanitize_key' === $call['name'];
+		$concat = $this->find_top_level( $start, $end, [ T_STRING_CONCAT ] );
+		if ( null === $concat ) {
+			return [ [ $start, $end ] ];
+		}
+
+		$left  = $this->get_concat_operands( $start, $concat - 1 );
+		$right = $this->get_concat_operands( $concat + 1, $end );
+
+		return null === $left || null === $right ? null : array_merge( $left, $right );
 	}
 
 	/**
@@ -380,6 +439,14 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return;
 		}
 
+		if ( $this->is_arrow_function_parameter( $scope_start, $ref_ptr, $name ) ) {
+			$this->report_unverifiable(
+				$var_ptr,
+				sprintf( '%s is an arrow function parameter, so its keys are not known', $name )
+			);
+			return;
+		}
+
 		// Writes later in an enclosing loop body run before the next iteration.
 		$limit = $ref_ptr;
 		foreach ( $this->tokens[ $ref_ptr ]['conditions'] as $condition_ptr => $condition_code ) {
@@ -391,8 +458,9 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			}
 		}
 
-		$has_base   = false;
-		$has_opaque = false;
+		$has_base             = false;
+		$has_conditional_base = false;
+		$has_opaque           = false;
 
 		for ( $i = $scope_start; $i <= $limit; $i++ ) {
 			$code = $this->tokens[ $i ]['code'];
@@ -427,7 +495,9 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 				continue;
 			}
 
-			if ( T_VARIABLE !== $code || $name !== $this->tokens[ $i ]['content'] || $i === $var_ptr ) {
+			// When tracing the value of a write, the write itself isn't part of it,
+			// so `$attrs = $attrs ?? []` doesn't vouch for its own right-hand side.
+			if ( T_VARIABLE !== $code || $name !== $this->tokens[ $i ]['content'] || $i === $var_ptr || $i === $ref_ptr ) {
 				continue;
 			}
 
@@ -435,7 +505,12 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 
 			switch ( $usage['type'] ) {
 				case 'assign':
-					$has_base = true;
+					// At file scope the variable may already be set, so only an assignment that always runs counts.
+					if ( null !== $owner || $this->always_runs_before( $i, $ref_ptr ) ) {
+						$has_base = true;
+					} else {
+						$has_conditional_base = true;
+					}
 					$this->check_array_expression( $usage['start'], $usage['end'], $i, $depth + 1 );
 					break;
 
@@ -456,12 +531,85 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			}
 		}
 
-		if ( ! $has_base && ! $has_opaque ) {
+		if ( $has_base || $has_opaque ) {
+			return;
+		}
+
+		if ( $has_conditional_base ) {
 			$this->report_unverifiable(
 				$var_ptr,
-				sprintf( 'no assignment to %s was found in the same scope before it is used', $name )
+				sprintf( '%s is only assigned conditionally at file scope, where it may already be set by the code that includes the file (block render templates receive $attributes, $content and $block)', $name )
 			);
+			return;
 		}
+
+		$this->report_unverifiable(
+			$var_ptr,
+			sprintf( 'no assignment to %s was found in the same scope before it is used', $name )
+		);
+	}
+
+	/**
+	 * Whether a variable is a parameter of an arrow function containing a position.
+	 *
+	 * Arrow functions are not added to a token's conditions, so they are found by scanning the scope.
+	 *
+	 * @param int    $scope_start First token of the enclosing function or file scope.
+	 * @param int    $ptr         The position.
+	 * @param string $name        The variable name, including the $.
+	 * @return bool
+	 */
+	private function is_arrow_function_parameter( int $scope_start, int $ptr, string $name ): bool {
+		for ( $i = $scope_start; $i < $ptr; $i++ ) {
+			if ( T_FN !== $this->tokens[ $i ]['code']
+				|| ! isset( $this->tokens[ $i ]['scope_opener'], $this->tokens[ $i ]['scope_closer'] )
+				|| $this->tokens[ $i ]['scope_closer'] < $ptr
+			) {
+				continue;
+			}
+
+			foreach ( $this->phpcsFile->getMethodParameters( $i ) as $param ) {
+				if ( $name === $param['name'] ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Whether an assignment always runs before a position is reached.
+	 *
+	 * True when the assignment comes first, is the start of its statement, and is
+	 * in the same block as the position or an enclosing one.
+	 *
+	 * @param int $ptr     The assigned T_VARIABLE token.
+	 * @param int $ref_ptr The position.
+	 * @return bool
+	 */
+	private function always_runs_before( int $ptr, int $ref_ptr ): bool {
+		if ( $ptr >= $ref_ptr || $this->phpcsFile->findStartOfStatement( $ptr ) !== $ptr ) {
+			return false;
+		}
+
+		if ( array_diff_key( $this->tokens[ $ptr ]['conditions'], $this->tokens[ $ref_ptr ]['conditions'] ) ) {
+			return false;
+		}
+
+		// Control structures without braces don't add conditions.
+		$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $ptr - 1, null, true );
+		if ( false === $prev ) {
+			return true;
+		}
+
+		if ( in_array( $this->tokens[ $prev ]['code'], [ T_ELSE, T_DO ], true ) ) {
+			return false;
+		}
+
+		return ! ( T_CLOSE_PARENTHESIS === $this->tokens[ $prev ]['code']
+			&& isset( $this->tokens[ $prev ]['parenthesis_owner'] )
+			&& in_array( $this->tokens[ $this->tokens[ $prev ]['parenthesis_owner'] ]['code'], [ T_IF, T_ELSEIF, T_WHILE, T_FOR, T_FOREACH ], true ) );
 	}
 
 	/**
@@ -616,13 +764,28 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 				];
 			}
 
+			// Passing an element by reference creates it, as `$name[ key ] = null` would.
+			$last_closer = false === $after
+				? $closer
+				: $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $after - 1, null, true );
+			$callee      = $this->get_callee_if_direct_argument( $ptr, $last_closer );
+			if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'], $callee['param'] ) ) {
+				$key = $this->trim_range( $next + 1, $closer - 1 );
+
+				return [
+					'type'  => 'element',
+					'start' => null === $key ? null : $key[0],
+					'end'   => null === $key ? null : $key[1],
+				];
+			}
+
 			return [ 'type' => 'read' ];
 		}
 
-		$callee = $this->get_callee_if_direct_argument( $ptr );
+		$callee = $this->get_callee_if_direct_argument( $ptr, $ptr );
 		if ( null !== $callee && ! $this->is_read_only_argument( $callee['name'], $callee['param'] ) ) {
 			return $this->opaque(
-				sprintf( '%s is passed to %s, which could modify it by reference', $name, '' === $callee['name'] ? 'a function or method' : $callee['name'] . '()' )
+				sprintf( '%s is passed to %s, which could modify it by reference', $name, $callee['label'] )
 			);
 		}
 
@@ -630,26 +793,21 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	}
 
 	/**
-	 * If a variable is passed directly as an argument to a function or method call, returns the callee.
+	 * If an expression is passed directly as an argument to a function or method call, returns the callee.
 	 *
-	 * @param int $ptr The T_VARIABLE token.
-	 * @return array{name: string, param: int|string}|null Lowercase function name (empty for methods and
-	 *                                                    dynamic calls) and parameter position or name,
-	 *                                                    or null if not an argument.
+	 * Grouping parentheses are looked through, since `foo( ( $attrs ) )` still
+	 * passes `$attrs` by reference.
+	 *
+	 * @param int $start First token of the expression.
+	 * @param int $end   Last token of the expression.
+	 * @return array{name: string, label: string, param: int|string}|null Lowercase global function name
+	 *                                                                    (empty for methods, namespaced and
+	 *                                                                    dynamic calls), a description for
+	 *                                                                    messages, and parameter position or
+	 *                                                                    name, or null if not an argument.
 	 */
-	private function get_callee_if_direct_argument( int $ptr ): ?array {
-		if ( empty( $this->tokens[ $ptr ]['nested_parenthesis'] ) ) {
-			return null;
-		}
-
-		$opener = array_key_last( $this->tokens[ $ptr ]['nested_parenthesis'] );
-		if ( isset( $this->tokens[ $opener ]['parenthesis_owner'] ) ) {
-			// Control structures, array(), function declarations and the like.
-			return null;
-		}
-
-		$name_ptr = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $opener - 1, null, true );
-		if ( false === $name_ptr ) {
+	private function get_callee_if_direct_argument( int $start, int $end ): ?array {
+		if ( empty( $this->tokens[ $start ]['nested_parenthesis'] ) ) {
 			return null;
 		}
 
@@ -663,14 +821,36 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			T_CLOSE_SQUARE_BRACKET,
 			T_CLOSE_CURLY_BRACKET,
 		];
-		if ( ! in_array( $this->tokens[ $name_ptr ]['code'], $callable_tokens, true ) ) {
+
+		$name_ptr = null;
+
+		foreach ( array_reverse( $this->tokens[ $start ]['nested_parenthesis'], true ) as $opener => $closer ) {
+			if ( isset( $this->tokens[ $opener ]['parenthesis_owner'] ) ) {
+				// Control structures, array(), function declarations and the like.
+				return null;
+			}
+
+			$prev = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $opener - 1, null, true );
+			if ( false !== $prev && in_array( $this->tokens[ $prev ]['code'], $callable_tokens, true ) ) {
+				$name_ptr = $prev;
+				break;
+			}
+
+			// Grouping parentheses around exactly the expression: look through them.
+			if ( [ $start, $end ] !== $this->trim_range( $opener + 1, $closer - 1 ) ) {
+				return null;
+			}
+
+			[ $start, $end ] = [ $opener, $closer ];
+		}
+
+		if ( null === $name_ptr ) {
 			return null;
 		}
 
 		$param_key = null;
 		foreach ( PassedParameters::getParameters( $this->phpcsFile, $name_ptr ) as $key => $param ) {
-			$range = $this->trim_range( $param['start'], $param['end'] );
-			if ( null !== $range && $range[0] === $ptr && $range[1] === $ptr ) {
+			if ( [ $start, $end ] === $this->trim_range( $param['start'], $param['end'] ) ) {
 				$param_key = $key;
 				break;
 			}
@@ -680,16 +860,29 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 			return null;
 		}
 
-		$name = '';
+		$name  = '';
+		$label = 'a function or method';
+
 		if ( T_STRING === $this->tokens[ $name_ptr ]['code'] ) {
 			$before_name = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $name_ptr - 1, null, true );
-			if ( false === $before_name || ! in_array( $this->tokens[ $before_name ]['code'], [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW ], true ) ) {
+			$before_code = false === $before_name ? null : $this->tokens[ $before_name ]['code'];
+
+			if ( T_NS_SEPARATOR === $before_code ) {
+				// `\count()` is the global function; `Project\count()` and `namespace\count()` are not.
+				$qualifier = $this->phpcsFile->findPrevious( Tokens::$emptyTokens, $before_name - 1, null, true );
+				if ( false !== $qualifier && in_array( $this->tokens[ $qualifier ]['code'], [ T_STRING, T_NAMESPACE ], true ) ) {
+					$label = 'a namespaced function';
+				} else {
+					$name = strtolower( $this->tokens[ $name_ptr ]['content'] );
+				}
+			} elseif ( ! in_array( $before_code, [ T_OBJECT_OPERATOR, T_NULLSAFE_OBJECT_OPERATOR, T_DOUBLE_COLON, T_NEW ], true ) ) {
 				$name = strtolower( $this->tokens[ $name_ptr ]['content'] );
 			}
 		}
 
 		return [
 			'name'  => $name,
+			'label' => '' === $name ? $label : $name . '()',
 			'param' => $param_key,
 		];
 	}
@@ -1005,7 +1198,7 @@ class BlockWrapperAttributesSniff extends AbstractFunctionParameterSniff {
 	 */
 	private function report_unverifiable( int $ptr, string $reason ): void {
 		$this->report(
-			'Keys passed to get_block_wrapper_attributes() (line %s) become HTML attribute names and are not escaped, and these keys cannot be verified: %s. Build the array in the same scope using string literal or sanitize_key() keys.',
+			'Keys passed to get_block_wrapper_attributes() (line %s) become HTML attribute names and are not escaped, and these keys cannot be verified: %s. Build the array in the same scope using string literal keys, or sanitize_key() after a literal prefix such as \'data-\'.',
 			$ptr,
 			'UnverifiableKeys',
 			[ $this->tokens[ $this->call_ptr ]['line'], $reason ]

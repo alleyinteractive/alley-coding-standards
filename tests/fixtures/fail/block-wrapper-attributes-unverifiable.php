@@ -44,6 +44,16 @@ function alley_block_wrapper_unverifiable( array $param, array $other, object $o
 	alley_modify_attrs( $passed );
 	echo get_block_wrapper_attributes( $passed );
 
+	// Passed in grouping parentheses, which still passes it by reference.
+	$grouped = [ 'class' => 'x' ];
+	alley_modify_attrs( ( $grouped ) );
+	echo get_block_wrapper_attributes( $grouped );
+
+	// A namespaced function, which isn't the built-in with the same name.
+	$qualified = [ 'class' => 'x' ];
+	\Alley\Project\count( $qualified );
+	echo get_block_wrapper_attributes( $qualified );
+
 	// Passed by reference to a built-in PHP function.
 	$sorted = [ 'class' => 'x' ];
 	ksort( $sorted );
@@ -74,6 +84,10 @@ function alley_block_wrapper_unverifiable( array $param, array $other, object $o
 
 	// Argument unpacking.
 	echo get_block_wrapper_attributes( ...$other );
+
+	// Arrow function parameter that shadows a safe variable in the enclosing scope.
+	$shadowed = [ 'class' => 'x' ];
+	echo implode( '', array_map( fn( $shadowed ) => get_block_wrapper_attributes( $shadowed ), [ $other ] ) );
 }
 
 /**

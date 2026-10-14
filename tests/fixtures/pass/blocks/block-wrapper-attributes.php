@@ -24,14 +24,20 @@ $wrapper_attributes['aria-label'] = $attributes['label'] ?? '';
 $wrapper_attributes['class']     .= ' is-ready';
 $wrapper_attributes[]             = 'no-key';
 
-$wrapper_attributes[ sanitize_key( $attributes['dataKey'] ) ] = $attributes['dataValue'];
+$wrapper_attributes[ 'data-' . sanitize_key( $attributes['dataKey'] ) ] = $attributes['dataValue'];
 
-$wrapper_attributes[ 'data-' . sanitize_key( $attributes['suffix'] ) ] = 'yes';
+$wrapper_attributes[ 'data-' . sanitize_key( $attributes['group'] ) . '-' . sanitize_key( $attributes['suffix'] ) ] = 'yes';
 ?>
 <div <?php echo get_block_wrapper_attributes( $wrapper_attributes ); ?>>
 	<?php echo wp_kses_post( $content ); ?>
 </div>
 <?php
+
+// Assigned in the same loop body as the call, so it always runs first.
+foreach ( $attributes['items'] ?? [] as $item ) {
+	$item_attributes = [ 'class' => 'item' ];
+	echo get_block_wrapper_attributes( $item_attributes );
+}
 
 // No arguments, or an empty array.
 echo get_block_wrapper_attributes();
@@ -46,13 +52,13 @@ echo GET_BLOCK_WRAPPER_ATTRIBUTES( [ 'class' => 'upper' ] );
 // Named argument.
 echo get_block_wrapper_attributes( extra_attributes: [ 'class' => 'named' ] );
 
-// Integer keys, sanitize_key() keys, and safe concatenations inline.
+// Integer keys, literal concatenations, and prefixed sanitize_key() keys inline.
 echo get_block_wrapper_attributes(
 	[
-		0                                          => 'zero',
-		sanitize_key( $attributes['key'] )         => 'a',
-		'data-' . sanitize_key( $attributes['k'] ) => 'b',
-		( 'data-grouped' )                         => 'c',
+		0                                                  => 'zero',
+		'data-' . sanitize_key( $attributes['k'] )         => 'b',
+		( 'data-grouped' )                                 => 'c',
+		( 'aria-' ) . ( sanitize_key( $attributes['a'] ) ) => 'd',
 	]
 );
 
@@ -65,7 +71,7 @@ function alley_block_wrapper_attributes_shapes( bool $is_wide ): void {
 	$base  = [ 'class' => 'base' ];
 	$extra = [ 'data-extra' => 'yes' ];
 
-	$extra[ sanitize_key( 'Data-Thing' ) ] = 'thing';
+	$extra[ 'data-' . sanitize_key( 'Thing' ) ] = 'thing';
 
 	echo get_block_wrapper_attributes( array_merge( $base, $extra, [ 'id' => 'merged' ] ) );
 	echo get_block_wrapper_attributes( array_replace( $base, [ 'class' => 'replaced' ] ) );
@@ -87,9 +93,17 @@ function alley_block_wrapper_attributes_shapes( bool $is_wide ): void {
 	$merged += [ 'data-plus' => 'yes' ];
 	echo get_block_wrapper_attributes( $merged );
 
+	// Arrow functions capture the enclosing scope by value.
+	$render = fn() => get_block_wrapper_attributes( $base );
+	echo $render();
+
 	// Read-only uses that do not mutate the array, including built-in PHP
-	// functions that do not take the argument by reference.
+	// functions that do not take the argument by reference, called globally,
+	// with grouping parentheses, or with an element of the array.
 	if ( isset( $base['class'] ) && ! empty( $base ) && count( $base ) && in_array( 'base', $base, true ) ) {
+		$stored = get_block_wrapper_attributes( $base );
+	}
+	if ( \count( $base ) && count( ( $base ) ) && strlen( $base['class'] ) ) {
 		$stored = get_block_wrapper_attributes( $base );
 	}
 

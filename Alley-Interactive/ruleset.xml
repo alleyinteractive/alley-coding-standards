@@ -74,8 +74,14 @@
   </rule>
 
   <!--
-  get_block_wrapper_attributes() escapes attribute values. Its keys are checked
+  get_block_wrapper_attributes() escapes attribute values with esc_attr(), but
+  outputs keys as attribute names as-is. Keys passed by project code are checked
   by Alley.PHP.BlockWrapperAttributes instead.
+
+  Keys added by block supports registered in core or other plugins are trusted:
+  neither this sniff nor an escaping wrapper can check them. The wp_kses_data()
+  wrapper used previously filters HTML tags, so attribute text without a "<"
+  passes through it unchanged; it did not protect against unsafe keys either.
   -->
   <rule ref="WordPress.Security.EscapeOutput">
     <properties>
