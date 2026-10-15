@@ -6,5 +6,5 @@
  */
 
 return [
-	'Alley.PHP.BlockWrapperAttributes.UnsafeKey' => [ 9, 12, 15, 18, 22, 28, 40 ],
+	'Alley.PHP.BlockWrapperAttributes.UnsafeKey' => [ 9, 12, 15, 18, 22, 28, 40, 44 ],
 ];

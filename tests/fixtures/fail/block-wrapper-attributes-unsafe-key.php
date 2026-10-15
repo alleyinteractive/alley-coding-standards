@@ -39,3 +39,6 @@ foreach ( $list as $alley_loop_key => $alley_loop_value ) {
 	echo get_block_wrapper_attributes( $alley_loop );
 	$alley_loop[ $alley_loop_key ] = $alley_loop_value;
 }
+
+// Dynamic key in long array syntax.
+echo get_block_wrapper_attributes( array( $alley_key => $value ) ); // phpcs:ignore Generic.Arrays.DisallowLongArraySyntax.Found

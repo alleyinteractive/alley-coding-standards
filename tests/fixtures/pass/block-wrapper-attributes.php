@@ -12,6 +12,7 @@ echo get_block_wrapper_attributes( [ 'class' => $class_name ] );
 echo \get_block_wrapper_attributes( [ 'data-id' => $id ] );
 
 // Long array syntax with sanitize_key() wrapping the key — must not be flagged.
+// The sniff reads array() separately from [], so it has its own pass and fail cases.
 echo get_block_wrapper_attributes( array( sanitize_key( $key ) => $value ) ); // phpcs:ignore Generic.Arrays.DisallowLongArraySyntax.Found
 
 // No arguments — must not be flagged.
