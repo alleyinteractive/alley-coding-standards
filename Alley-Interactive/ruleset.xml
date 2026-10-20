@@ -78,6 +78,15 @@
     <exclude-pattern>tests/*</exclude-pattern>
   </rule>
 
+  <!-- get_block_wrapper_attributes() returns already-escaped output. -->
+  <rule ref="WordPress.Security.EscapeOutput">
+    <properties>
+      <property name="customAutoEscapedFunctions" type="array" extend="true">
+        <element value="get_block_wrapper_attributes"/>
+      </property>
+    </properties>
+  </rule>
+
   <!-- Keep common boilerplate code from triggering an error. -->
   <rule ref="Squiz.Commenting.FileComment.SpacingAfterComment">
     <!--
