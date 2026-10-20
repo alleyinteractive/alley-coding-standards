@@ -52,7 +52,7 @@ Custom sniff sources are referenced in PHPCS output as `Alley.PHP.<SniffName>.<E
 
 - **`tests/fixtures/pass/*.php`** — files that must produce zero PHPCS errors
 - **`tests/fixtures/fail/*.php`** — files that must produce at least one PHPCS error
-- **`tests/fixtures/fail/expectations/*.php`** — return arrays of expected PHPCS error source strings (e.g. `'Alley.PHP.StrictTypeDeclarationSpacing.SpaceAfterEquals'`); the test fails if an unexpected error appears OR if an expected error is absent
+- **`tests/fixtures/fail/expectations/*.php`** — return arrays of expected PHPCS error source strings (e.g. `'Alley.PHP.StrictTypeDeclarationSpacing.SpaceAfterEquals'`); the test fails if an error appears that is not listed, or if a listed source never appears. A source can also be pinned to line numbers (format in README.md under "Special Considerations for failure expectations")
 
 Expectations files are matched by filename to their corresponding fail fixture. An expectations file is optional — without one, the test only asserts that _some_ error occurs.
 

@@ -2,6 +2,27 @@
 
 This project adheres to [Keep a CHANGELOG](https://keepachangelog.com/en/1.0.0/).
 
+## 2.6.0
+
+### Added
+
+- Add `Alley.PHP.BlockWrapperAttributes` sniff. Requires the array keys passed to
+  `get_block_wrapper_attributes()` to be literals or wrapped in `sanitize_key()`, since keys
+  become attribute names and are not escaped. Reports `UnsafeKey` and `UnverifiableKeys`.
+- Support line-number expectations for failure fixtures in tests.
+
+### Changed
+
+- Treat `get_block_wrapper_attributes()` as auto-escaped for `WordPress.Security.EscapeOutput`.
+
+## 2.5.0
+
+### Added
+
+- Add `Alley.PHP.FilterCallbackTypehint` sniff. Flags a typehint on the first parameter of an
+  `add_filter()` callback, since core or plugins may pass a different type and cause a fatal
+  error. `mixed` is allowed, and violations can be fixed with `phpcbf`.
+
 ## 2.4.1
 
 ### Changed
